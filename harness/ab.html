@@ -20,7 +20,8 @@
          font: 15px/1.5 system-ui, -apple-system, sans-serif; }
   main { max-width: 1000px; margin: 0 auto; }
   h1 { font-size: 20px; margin: 0 0 4px; }
-  .refs { color: var(--muted); font: 13px ui-monospace, Menlo, monospace; margin-bottom: 16px; }
+  .refs { color: var(--muted); font: 13px ui-monospace, Menlo, monospace; }
+  .source { font-size: 14px; margin: 4px 0 16px; }
   .ab { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
   figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
   figcaption { padding: 8px 10px; font-weight: 600; border-bottom: 1px solid var(--line); }
@@ -41,6 +42,7 @@
 <main>
   <h1>@TITLE@</h1>
   <div class="refs">A = @REF_A@ · B = @REF_B@</div>
+  <div class="source">@SOURCE@</div>
   <div class="ab">
     <figure><figcaption>A <code>@REF_A@</code></figcaption><iframe src="a/index.html" title="A"></iframe></figure>
     <figure><figcaption>B <code>@REF_B@</code></figcaption><iframe src="b/index.html" title="B"></iframe></figure>

@@ -32,7 +32,15 @@ Web (needs `emcc`; macOS is fine):
 source ~/src/emsdk/emsdk_env.sh
 ./build.sh 01-rasterpos web                  # A and B from demos/01-rasterpos/refs
 ./build.sh 01-rasterpos master <patch-ref> web   # or any two refs
-python3 -m http.server -d site 8765    # then open /01-rasterpos/
+python3 -m http.server --directory site 8765   # then open http://127.0.0.1:8765/01-rasterpos/
+```
+
+The page must be served over HTTP: browsers won't load the `.wasm` from
+`file://`. Any static server works; `build.sh` prints the command above after
+each web build. Each A/B page links its demo's source in this repo on GitHub
+(`origin`'s current branch, or `$AB_WEB_URL`).
+
+```
 ```
 
 Native (Linux + Mesa with EGL surfaceless; gl4es can't be built on macOS):

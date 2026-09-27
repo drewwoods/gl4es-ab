@@ -75,9 +75,30 @@ title=$(sed -n 's/^# *//p;q' "$demo_dir/README.md" 2>/dev/null || echo "$demo")
 
 # Where the commits can be browsed: $GL4ES_WEB_URL, else the checkout's
 # origin remote if it's on GitHub.
-web_url=${GL4ES_WEB_URL:-$(git -C "$GL4ES_REPO" remote get-url origin 2>/dev/null \
-    | sed -nE 's#^(git@github\.com:|https://github\.com/)([^/]+/[^/]+)$#https://github.com/\2#p' \
-    | sed 's/\.git$//')}
+github_url() { # github_url <repo dir>  ->  https://github.com/owner/name, if origin is GitHub
+    git -C "$1" remote get-url origin 2>/dev/null \
+        | sed -nE 's#^(git@github\.com:|https://github\.com/)([^/]+/[^/]+)$#https://github.com/\2#p' \
+        | sed 's/\.git$//'
+}
+web_url=${GL4ES_WEB_URL:-$(github_url "$GL4ES_REPO")}
+# And where this repo's demo source can be browsed: $AB_WEB_URL, else origin,
+# on the current branch.
+ab_url=${AB_WEB_URL:-$(github_url "$here")}
+ab_branch=$(git -C "$here" rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)
+
+# The A/B page's pointer to the demo source.
+source_html() {
+    local tree=$ab_url/tree/$ab_branch blob=$ab_url/blob/$ab_branch
+    if [ -n "$ab_url" ]; then
+        echo "Demo source: <a href=\"$tree/demos/$demo\">demos/$demo</a>" \
+             "(<a href=\"$blob/demos/$demo/main.c\">main.c</a>," \
+             "<a href=\"$blob/demos/$demo/README.md\">README.md</a>," \
+             "<a href=\"$blob/demos/$demo/refs\">refs</a>)" \
+             "· <a href=\"$tree/harness\">harness</a>"
+    else
+        echo "Demo source: <code>demos/$demo/main.c</code> in gl4es-ab"
+    fi
+}
 
 html_escape() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/"/\&quot;/g'; }
 
@@ -122,11 +143,16 @@ build_web() {
     sed -e "s|@TITLE@|$title|g" -e "s|@DEMO@|$demo|g" \
         -e "s|@REF_A@|$label_a|g" -e "s|@SHA_A@|${sha_a:0:10}|g" \
         -e "s|@REF_B@|$label_b|g" -e "s|@SHA_B@|${sha_b:0:10}|g" \
+        -e "s|@SOURCE@|$(source_html)|g" \
         "$here/harness/ab.html" \
         | awk -v f="$commits" '/@COMMITS@/ { while ((getline l < f) > 0) print l; next } { print }' \
         >"$out/index.html"
     [ -f "$demo_dir/README.md" ] && cp "$demo_dir/README.md" "$out/README.md"
     echo "web: $out/index.html"
+    # Browsers won't load the .wasm from file://, so the page needs a server.
+    echo "Serve it with Python's built-in server (any static server works):"
+    echo "    python3 -m http.server --directory $here/site 8765"
+    echo "then open http://127.0.0.1:8765/$demo/  (pick another port if 8765 is taken)"
 }
 
 build_native() {
