@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>01 · glRasterPos3f under a perspective projection</title>
+<title>02 · glBitmap batches clearing the whole viewport</title>
 <style>
   :root {
     --bg: #fafafa; --fg: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7; --panel: #fff;
@@ -64,14 +64,14 @@
   :root[data-theme="dark"] a { color: #6cb4ff; }
 </style>
 </head>
-<body class="">
+<body class="perf">
 <main>
-  <h1>01 · glRasterPos3f under a perspective projection</h1>
-  <div class="refs">A = original, 0f7c7c811c · B = patched, e9d6b1e850</div>
-  <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/01-rasterpos">demos/01-rasterpos</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/01-rasterpos/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/01-rasterpos/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/01-rasterpos/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
+  <h1>02 · glBitmap batches clearing the whole viewport</h1>
+  <div class="refs">A = original, 0f7c7c811c · B = patched, 016b627971</div>
+  <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/02-bitmap-dirty-clear">demos/02-bitmap-dirty-clear</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/02-bitmap-dirty-clear/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/02-bitmap-dirty-clear/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/02-bitmap-dirty-clear/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
     <figure><figcaption>A · original <code>0f7c7c811c</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
-    <figure><figcaption>B · patched <code>e9d6b1e850</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+    <figure><figcaption>B · patched <code>016b627971</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <section class="timing">
     <div class="head">
@@ -102,9 +102,9 @@
 <p>A is <a href="https://github.com/drewwoods/gl4es/commit/0f7c7c811c6523a89e914354103413a858cf379e"><code>0f7c7c811c</code></a> Merge pull request #516 from drewwoods/fix-bitmap-left-clip</p>
 <p>B adds these commits:</p>
 <ol>
-<li><a href="https://github.com/drewwoods/gl4es/commit/e9d6b1e850eaf73006cf3245f12d3ad9f572e4fd"><code>e9d6b1e850</code></a> src/gl: Fix glRasterPos3f under a perspective projection</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/016b627971a766613240452146237b5736901223"><code>016b627971</code></a> src/gl: Clear only the dirty part of glBitmap's buffer between batches</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/0f7c7c811c65...e9d6b1e850ea">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/0f7c7c811c65...016b627971a7">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and

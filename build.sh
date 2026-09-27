@@ -9,6 +9,7 @@
 # with -ffile-prefix-map so no local paths end up in the published pages.
 # SANITIZE=address (native only) builds gl4es and the demo with ASan.
 # AB_BUILD_ONLY=1 (native only) links the binaries without running them.
+# Native runs end with a frame-time comparison of A and B (AB_BENCH_FRAMES).
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
@@ -37,6 +38,7 @@ environment:
   SANITIZE=address     native: build gl4es and the demo with ASan
   AB_BUILD_ONLY=1      native: link, don't run
   AB_FRAME_T=<s>       native: time to render the screenshot at (default 1)
+  AB_BENCH_FRAMES=<n>  native: frames per side for the timing (default 600; 0: skip)
   GL4ES_WEB_URL=<url>  GitHub base for the gl4es commit links (default: origin)
   AB_WEB_URL=<url>     GitHub base for the demo source links (default: origin)
 
@@ -173,7 +175,7 @@ site_index() {
     for d in "$here"/site/*/; do
         name=$(basename "$d")
         [ -f "$d/index.html" ] || continue
-        title=$(sed -n 's/^# *//p;q' "$here/demos/$name/README.md" 2>/dev/null | html_escape)
+        title=$({ sed -n 's/^# *//p;q' "$here/demos/$name/README.md" 2>/dev/null || echo "$name"; } | html_escape)
         echo "    <li><a href=\"$name/\">${title:-$name}</a></li>" >>"$items"
     done
     sed -e "s|@AB_URL@|${ab_url:-https://github.com}|g" "$here/harness/index.html" \
@@ -200,7 +202,10 @@ build_web() {
     local commits=$here/out/commits-$demo.html
     mkdir -p "$here/out"
     commits_html >"$commits"
-    sed -e "s|@TITLE@|$title|g" -e "s|@DEMO@|$demo|g" \
+    # PERF=1 in the refs file: a performance demo; the page leads with the
+    # frame times and measures them on load.
+    local kind=; [ "$(default_ref PERF)" = 1 ] && kind=perf
+    sed -e "s|@TITLE@|$title|g" -e "s|@DEMO@|$demo|g" -e "s|@KIND@|$kind|g" \
         -e "s|@REF_A@|$label_a|g" -e "s|@SHA_A@|${sha_a:0:10}|g" \
         -e "s|@REF_B@|$label_b|g" -e "s|@SHA_B@|${sha_b:0:10}|g" \
         -e "s|@SOURCE@|$(source_html)|g" \
@@ -247,6 +252,28 @@ build_native() {
         command -v pnmtopng >/dev/null && pnmtopng "$out/$side.ppm" >"$out/$side.png" && rm "$out/$side.ppm"
     done
     echo "native: $out/{ref,a,b}.png"
+    bench_native "$out"
+}
+
+# Frame time of ref, A and B rendering the same frame headless, and B
+# against A. Each prints the median of its 30-frame window averages.
+bench_native() {
+    local out=$1 frames=${AB_BENCH_FRAMES:-600} side ms a b
+    [ "$frames" -gt 0 ] || return 0
+    [ -n "${SANITIZE:-}" ] && { echo "timing: skipped under SANITIZE"; return 0; }
+    echo "timing: median CPU ms/frame over $frames frames (demo_draw + gl4es_pre_swap):"
+    for side in ref a b; do
+        ms=$( (cd "$out" && ./$side --frames "$frames" --t "${AB_FRAME_T:-1}") 2>/dev/null \
+            | sed -n 's/^timing: \([0-9.]*\) ms.*/\1/p')
+        printf '    %-4s %s\n' "$side" "${ms:-failed}"
+        case $side in a) a=$ms ;; b) b=$ms ;; esac
+    done
+    [ -n "${a:-}" ] && [ -n "${b:-}" ] && awk -v a="$a" -v b="$b" 'BEGIN {
+        d = b - a; p = a > 0 ? 100 * d / a : 0
+        if (p > -5 && p < 5) v = "no clear difference (within 5%)"
+        else if (d < 0) v = sprintf("B is %.2fx as fast as A", a / b)
+        else v = "B is slower than A"
+        printf "    B - A: %+.4f ms (%+.1f%%): %s\n", d, p, v }'
 }
 
 # Fail before doing any work, saying what's missing and what else to try.

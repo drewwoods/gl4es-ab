@@ -1,0 +1,7 @@
+# Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
+# A: 0f7c7c81 upstream master
+# B: 016b6279 "src/gl: Clear only the dirty part of glBitmap's buffer between batches"
+REF_A=0f7c7c811c6523a89e914354103413a858cf379e
+REF_B=016b627971a766613240452146237b5736901223
+# A performance patch: the page leads with the frame times.
+PERF=1

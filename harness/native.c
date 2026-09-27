@@ -196,11 +196,7 @@ int main(int argc, char **argv)
             gettimeofday(&tv, NULL);
             ft = fmod(tv.tv_sec + tv.tv_usec / 1e6, 60.0);
         }
-        ab_frame(ft);
-        /* gl4es's swap hooks around the swap (a pbuffer has none to do). */
-#ifndef AB_DESKTOP_GL
-        gl4es_pre_swap();
-#endif
+        ab_frame(ft);  /* includes gl4es_pre_swap() */
         if (shot && i == frames - 1)
             write_ppm(shot);
         if (windowed)
@@ -215,5 +211,8 @@ int main(int argc, char **argv)
     }
     glFinish();
     printf("%s%s\n", windowed ? "\r" : "", ab_status());
+    if (ab_windows())
+        printf("timing: %.4f ms/frame, median of %d windows of %d frames\n",
+               ab_median_ms(), ab_windows(), AB_WINDOW);
     return 0;
 }

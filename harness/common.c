@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -8,9 +9,18 @@
 
 static char report[256];
 static char status[512];
-static double draw_ms_sum;
-static int draw_ms_n;
-static double draw_ms_avg;
+
+/* Frame timing: CPU time from the start of demo_draw() to the end of
+ * gl4es_pre_swap(), which draws what gl4es still has queued (glBitmap
+ * batches, for one). GPU work done later isn't counted, but a driver call
+ * that waits for the GPU (a WebGL getParameter, say) is. Frames are
+ * averaged in windows of AB_WINDOW; the headline number is the median of
+ * the windows so far, which shrugs off the odd slow one. */
+#define AB_MAX_WINDOWS 512
+static double win_sum;
+static int win_n;
+static double windows[AB_MAX_WINDOWS];  /* ring of window averages */
+static int nwindows;                     /* windows completed since the reset */
 
 double ab_now_ms(void)
 {
@@ -27,18 +37,50 @@ void ab_report(const char *fmt, ...)
     va_end(ap);
 }
 
-/* Draw a frame and keep a 60-frame average of the CPU time spent in
- * demo_draw (the gl4es-side cost; the GPU work is not included). */
 void ab_frame(double t)
 {
     double t0 = ab_now_ms();
     demo_draw(t);
-    draw_ms_sum += ab_now_ms() - t0;
-    if (++draw_ms_n == 60) {
-        draw_ms_avg = draw_ms_sum / draw_ms_n;
-        draw_ms_sum = 0;
-        draw_ms_n = 0;
+#ifndef AB_DESKTOP_GL
+    gl4es_pre_swap();
+#endif
+    win_sum += ab_now_ms() - t0;
+    if (++win_n == AB_WINDOW) {
+        windows[nwindows++ % AB_MAX_WINDOWS] = win_sum / win_n;
+        win_sum = 0;
+        win_n = 0;
     }
+}
+
+int ab_windows(void) { return nwindows; }
+
+double ab_window_ms(void)
+{
+    return nwindows ? windows[(nwindows - 1) % AB_MAX_WINDOWS] : -1;
+}
+
+static int cmp_double(const void *a, const void *b)
+{
+    double x = *(const double *)a, y = *(const double *)b;
+    return (x > y) - (x < y);
+}
+
+double ab_median_ms(void)
+{
+    static double sorted[AB_MAX_WINDOWS];
+    int n = nwindows < AB_MAX_WINDOWS ? nwindows : AB_MAX_WINDOWS;
+    if (!n)
+        return -1;
+    memcpy(sorted, windows, n * sizeof *sorted);
+    qsort(sorted, n, sizeof *sorted, cmp_double);
+    return n % 2 ? sorted[n / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+}
+
+void ab_reset_timing(void)
+{
+    nwindows = 0;
+    win_sum = 0;
+    win_n = 0;
 }
 
 #define AB_MAX_PARAMS 16
@@ -94,13 +136,15 @@ const char *ab_params_json(void)
 
 const char *ab_status(void)
 {
-    if (draw_ms_avg == 0 && draw_ms_n)
-        draw_ms_avg = draw_ms_sum / draw_ms_n;
-    /* "a · master@81547d9867", or just "a · 81547d9867" when the ref is a SHA. */
+    /* "A (original) · master@81547d9867", or just "... · 81547d9867" when
+     * the ref is a SHA; then the latest window's frame time. */
     int named = strcmp(AB_REF, AB_SHA) != 0;
-    snprintf(status, sizeof status, "%s · %s%s%s · draw %.3f ms%s%s",
+    char ms[32] = "…";
+    if (nwindows)
+        snprintf(ms, sizeof ms, "%.3f", ab_window_ms());
+    snprintf(status, sizeof status, "%s · %s%s%s · frame %s ms%s%s",
              AB_SIDE, named ? AB_REF : "", named ? "@" : "", AB_SHA,
-             draw_ms_avg, report[0] ? " · " : "", report);
+             ms, report[0] ? " · " : "", report);
     return status;
 }
 
@@ -152,13 +196,18 @@ static const GLubyte *glyph(char c)
 
 void ab_label(int x, int y, const char *s)
 {
+    ab_label_vp(AB_W, AB_H, x, y, s);
+}
+
+void ab_label_vp(int vw, int vh, int x, int y, const char *s)
+{
     GLint align;
     glGetIntegerv(GL_UNPACK_ALIGNMENT, &align);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    glOrtho(0, AB_W, 0, AB_H, -1, 1);
+    glOrtho(0, vw, 0, vh, -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();

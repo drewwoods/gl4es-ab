@@ -28,6 +28,8 @@ void ab_report(const char *fmt, ...);
  * case, digits 0-3 and ( ) = - : , . / only; 12 px per character. Leaves
  * the matrix mode as GL_MODELVIEW and the raster position after the text. */
 void ab_label(int x, int y, const char *s);
+/* The same, for a viewport of vw x vh other than the default AB_W x AB_H. */
+void ab_label_vp(int vw, int vh, int x, int y, const char *s);
 
 /* A value the viewer can adjust, registered from demo_init(). The A/B page
  * shows a slider for it and sets it on both sides at once (and keeps it in
@@ -41,11 +43,20 @@ const char *ab_params_json(void);
 #ifndef AB_DESKTOP_GL
 /* gl4es's swap hooks for hosts without glX/EGL (-DNOX11 -DNOEGL builds).
  * pre_swap flushes what gl4es still queues on the CPU, such as glBitmap
- * batches; glClear does not flush them. */
+ * batches; glClear does not flush them. ab_frame() calls it, so the
+ * frame time includes that flush; the hosts call post_swap. */
 void gl4es_pre_swap(void);
 void gl4es_post_swap(void);
 #endif
+/* Draws a frame (demo_draw, then gl4es_pre_swap) and times it. */
 void ab_frame(double t);
 const char *ab_status(void);
+/* Frame times, averaged over windows of AB_WINDOW frames. -1 until the
+ * first window completes. */
+#define AB_WINDOW 30
+int ab_windows(void);          /* windows completed since the last reset */
+double ab_window_ms(void);     /* the latest window's average */
+double ab_median_ms(void);     /* median of the windows since the reset */
+void ab_reset_timing(void);
 
 #endif

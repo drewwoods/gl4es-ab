@@ -15,18 +15,33 @@ static double frozen_t = -1.0;
 
 EMSCRIPTEN_KEEPALIVE void ab_set_time(double t) { frozen_t = t; }
 EMSCRIPTEN_KEEPALIVE void ab_web_set_param(int i, double v) { ab_set_param_index(i, (float)v); }
+/* The A/B page's timing run pauses one side while it measures the other. */
+EMSCRIPTEN_KEEPALIVE void ab_web_run(int run)
+{
+    if (run) {
+        ab_reset_timing();  /* a window must not span the pause */
+        emscripten_resume_main_loop();
+    } else {
+        emscripten_pause_main_loop();
+    }
+}
 
 static void tick(void)
 {
     /* Wall-clock time keeps the A and B iframes on the same pose. Demos
      * should loop in a period dividing 60 s so the wrap is seamless. */
     double t = frozen_t >= 0 ? frozen_t : fmod(emscripten_date_now() / 1000.0, 60.0);
+    int windows = ab_windows();
     ab_frame(t);
-    /* The browser presents when tick() returns; this is our swap. */
-    gl4es_pre_swap();
+    /* The browser presents when tick() returns; this is our swap
+     * (ab_frame() has called gl4es_pre_swap()). */
     gl4es_post_swap();
     EM_ASM({ document.getElementById('status').textContent = UTF8ToString($0); },
            ab_status());
+    /* Each completed window goes to the A/B page's timing panel. */
+    if (ab_windows() != windows)
+        EM_ASM({ if (window.parent !== window) window.parent.postMessage({ abTiming: $0 }, '*'); },
+               ab_window_ms());
 }
 
 int main(void)
@@ -64,6 +79,8 @@ int main(void)
         window.addEventListener('message', function(e) {
             if (e.data && typeof e.data.param === 'number')
                 Module._ab_web_set_param(e.data.param, e.data.value);
+            if (e.data && typeof e.data.run === 'boolean')
+                Module._ab_web_run(e.data.run ? 1 : 0);
         });
         if (params.length && window.parent !== window)
             window.parent.postMessage({ abParams: params }, '*');
