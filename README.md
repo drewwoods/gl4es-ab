@@ -17,12 +17,22 @@ harness/           shared host code
 demos/NN-<patch>/  main.c + README.md (the bug, what to look for, expected result)
                    + refs: the default A and B, as full gl4es SHAs
 build.sh           build.sh <demo> [ref-A] [ref-B] [web|native|all]
-site/NN-<patch>/   the built A/B page (index.html, a/, b/)
+site/NN-<patch>/   the built A/B page (index.html, a/, b/); site/index.html lists them
+deploy.sh          publish site/ to GitHub Pages and wait until it is live
 ```
 
 Hosted at **https://drewwoods.github.io/gl4es-ab/**: every push to `main` that
-changes `site/` publishes it (`.github/workflows/pages.yml`). To update a page,
-rebuild it with `build.sh` and commit `site/`.
+changes `site/` publishes it (`.github/workflows/pages.yml`).
+
+```
+./deploy.sh 01-rasterpos     # rebuild that page, commit site/, push, wait until live
+./deploy.sh --all            # every demo
+./deploy.sh                  # site/ as it is
+```
+
+`deploy.sh` checks `gh` is installed and logged in and that Pages deploys from
+GitHub Actions, commits only `site/`, watches the Pages run, then fetches the
+live files and checks they match the commit.
 
 ## Building
 

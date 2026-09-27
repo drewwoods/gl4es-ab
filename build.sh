@@ -162,6 +162,22 @@ commits_html() {
     fi
 }
 
+# site/index.html: every demo that has a built page, from harness/index.html.
+site_index() {
+    local items=$here/out/site-index.html d name title
+    mkdir -p "$here/out"
+    : >"$items"
+    for d in "$here"/site/*/; do
+        name=$(basename "$d")
+        [ -f "$d/index.html" ] || continue
+        title=$(sed -n 's/^# *//p;q' "$here/demos/$name/README.md" 2>/dev/null | html_escape)
+        echo "    <li><a href=\"$name/\">${title:-$name}</a></li>" >>"$items"
+    done
+    sed -e "s|@AB_URL@|${ab_url:-https://github.com}|g" "$here/harness/index.html" \
+        | awk -v f="$items" '/@DEMOS@/ { while ((getline l < f) > 0) print l; next } { print }' \
+        >"$here/site/index.html"
+}
+
 build_web() {
     local out=$here/site/$demo
     mkdir -p "$out/a" "$out/b"
@@ -189,6 +205,7 @@ build_web() {
         | awk -v f="$commits" '/@COMMITS@/ { while ((getline l < f) > 0) print l; next } { print }' \
         >"$out/index.html"
     [ -f "$demo_dir/README.md" ] && cp "$demo_dir/README.md" "$out/README.md"
+    site_index
     echo "web: $out/index.html"
     # Browsers won't load the .wasm from file://, so the page needs a server.
     echo "Serve it with Python's built-in server (any static server works):"
