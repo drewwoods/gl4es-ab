@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gl4es-ab side</title>
+<style>
+  :root { color-scheme: light dark; }
+  html, body { margin: 0; overflow: hidden; background: #111; color: #ddd; font: 12px/1.4 ui-monospace, Menlo, monospace; }
+  canvas { display: block; margin: 0 auto; width: 100%; max-width: 480px; aspect-ratio: 4 / 3; image-rendering: pixelated; }
+  #status { padding: 4px 6px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<canvas id="canvas" width="480" height="360" oncontextmenu="event.preventDefault()"></canvas>
+<div id="status">loading…</div>
+<script>var Module = { canvas: document.getElementById('canvas'),
+  printErr: function(s) { console.warn(s); } };</script>
+{{{ SCRIPT }}}
+</body>
+</html>

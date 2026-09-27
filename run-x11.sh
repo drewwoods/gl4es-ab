@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# run-x11.sh <demo> [--t <seconds>] [--frames <n>]
+#
+# Opens the native builds of <demo> side by side on $DISPLAY (default :0):
+# Mesa reference, A, B. Build them first with build.sh ... native. The windows
+# follow the wall clock, so they show the same pose; --t freezes them.
+# Close a window, or press Esc or q in it, to quit that one.
+set -euo pipefail
+here=$(cd "$(dirname "$0")" && pwd)
+demo=${1:?usage: run-x11.sh <demo> [--t <seconds>] [--frames <n>]}
+shift
+out=$here/out/native/$demo
+export DISPLAY=${DISPLAY:-:0} LIBGL_NOBANNER=1
+x=0
+for side in ref a b; do
+    [ -x "$out/$side" ] || { echo "missing $out/$side: run build.sh $demo <A> <B> native" >&2; exit 1; }
+    "$out/$side" --window --x "$x" "$@" &
+    x=$((x + 490))
+done
+wait

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>@TITLE@</title>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7; --panel: #fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161617; --fg: #f5f5f7; --muted: #a1a1a6; --line: #3a3a3c; --panel: #1f1f21;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161617; --fg: #f5f5f7; --muted: #a1a1a6; --line: #3a3a3c; --panel: #1f1f21;
+  }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg);
+         font: 15px/1.5 system-ui, -apple-system, sans-serif; }
+  main { max-width: 1000px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .refs { color: var(--muted); font: 13px ui-monospace, Menlo, monospace; margin-bottom: 16px; }
+  .ab { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  figcaption { padding: 8px 10px; font-weight: 600; border-bottom: 1px solid var(--line); }
+  figcaption code { font-weight: 400; color: var(--muted); }
+  iframe { display: block; width: 100%; aspect-ratio: 480 / 410; border: 0; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0; }
+  .controls input[type=range] { flex: 1; min-width: 160px; }
+  .notes { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>@TITLE@</h1>
+  <div class="refs">A = @REF_A@ (@SHA_A@) · B = @REF_B@ (@SHA_B@)</div>
+  <div class="ab">
+    <figure><figcaption>A <code>@REF_A@</code></figcaption><iframe src="a/index.html" title="A"></iframe></figure>
+    <figure><figcaption>B <code>@REF_B@</code></figcaption><iframe src="b/index.html" title="B"></iframe></figure>
+  </div>
+  <div class="controls">
+    <label><input type="checkbox" id="freeze"> Freeze both at</label>
+    <input type="range" id="t" min="0" max="60" step="0.01" value="0">
+    <output id="tv">0.00 s</output>
+  </div>
+  <div class="notes">
+    A and B are separate pages because each links its own gl4es build, and
+    gl4es keeps global state. Both follow the wall clock, so they show the same
+    pose; freeze to compare a fixed frame. What to look for: <a href="README.md">README.md</a>.
+  </div>
+</main>
+<script>
+  var freeze = document.getElementById('freeze'), t = document.getElementById('t'),
+      tv = document.getElementById('tv');
+  function send() {
+    var v = freeze.checked ? parseFloat(t.value) : -1;
+    tv.textContent = parseFloat(t.value).toFixed(2) + ' s';
+    document.querySelectorAll('iframe').forEach(function(f) {
+      f.contentWindow.postMessage({ t: v }, '*');
+    });
+  }
+  freeze.addEventListener('change', send);
+  t.addEventListener('input', function() { freeze.checked = true; send(); });
+</script>
+</body>
+</html>
