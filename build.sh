@@ -111,6 +111,8 @@ sha_b=$(sha_of "$ref_b")
 label() { if [[ $1 =~ ^[0-9a-f]{7,40}$ ]]; then echo "${1:0:10}"; else echo "$1"; fi; }
 label_a=$(label "$ref_a")
 label_b=$(label "$ref_b")
+# What each side is called on the pages, in the status line and window titles.
+side_name() { case $1 in a) echo "A (original)" ;; b) echo "B (patched)" ;; esac; }
 title=$(sed -n 's/^# *//p;q' "$demo_dir/README.md" 2>/dev/null || echo "$demo")
 
 # Where the commits can be browsed: $GL4ES_WEB_URL, else the checkout's
@@ -189,7 +191,7 @@ build_web() {
         # Relative __FILE__ paths: the pages are published.
         emcc -O2 -ffile-prefix-map="$here/"= -I"$here/harness" -I"$here/out/gl4es/$sha/src/include" \
             -include "$here/out/gl4es/$sha/src/include/GL/gl.h" \
-            -DAB_SIDE="\"$side\"" -DAB_REF="\"$(label "$ref")\"" -DAB_SHA="\"${sha:0:10}\"" \
+            -DAB_SIDE="\"$(side_name $side)\"" -DAB_REF="\"$(label "$ref")\"" -DAB_SHA="\"${sha:0:10}\"" \
             "$here/harness/web.c" "$here/harness/common.c" "$demo_dir/main.c" \
             "$lib" -sUSE_WEBGL2=1 -sFULL_ES2=1 \
             -sALLOW_MEMORY_GROWTH=1 --shell-file "$here/harness/shell.html" \
@@ -227,7 +229,7 @@ build_native() {
         if [ $side = a ]; then ref=$ref_a sha=$sha_a; else ref=$ref_b sha=$sha_b; fi
         lib=$(build_gl4es "$sha" "$kind")
         $cc -I"$here/out/gl4es/$sha/src/include" "${flags[@]}" \
-            -DAB_SIDE="\"$side\"" -DAB_REF="\"$(label "$ref")\"" -DAB_SHA="\"${sha:0:10}\"" \
+            -DAB_SIDE="\"$(side_name $side)\"" -DAB_REF="\"$(label "$ref")\"" -DAB_SHA="\"${sha:0:10}\"" \
             "$lib" -lEGL -lX11 -ldl -lm -o "$out/$side"
     done
     # Mesa desktop GL (compatibility profile), no gl4es: the "correct" reference

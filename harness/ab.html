@@ -48,11 +48,11 @@
 <body>
 <main>
   <h1>@TITLE@</h1>
-  <div class="refs">A = @REF_A@ · B = @REF_B@</div>
+  <div class="refs">A = original, @REF_A@ · B = patched, @REF_B@</div>
   <div class="source">@SOURCE@</div>
   <div class="ab">
-    <figure><figcaption>A <code>@REF_A@</code></figcaption><iframe src="a/index.html" title="A"></iframe></figure>
-    <figure><figcaption>B <code>@REF_B@</code></figcaption><iframe src="b/index.html" title="B"></iframe></figure>
+    <figure><figcaption>A · original <code>@REF_A@</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
+    <figure><figcaption>B · patched <code>@REF_B@</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <div class="controls">
     <label><input type="checkbox" id="freeze"> Freeze both at</label>
