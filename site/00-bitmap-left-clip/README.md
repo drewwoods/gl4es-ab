@@ -47,7 +47,7 @@ A and B default to the SHAs in `refs`; pass `[ref-A] [ref-B]` to override.
 ```
 
 `crashtest.sh` builds both sides with AddressSanitizer and passes when A
-reports a memory error and B runs clean. On gracemont (gcc 14, Mesa 25.2.8),
+reports a memory error and B runs clean. On Ubuntu 24.04 (gcc 14, Mesa 25.2.8, Intel Alder Lake-N),
 master reports a heap-buffer-overflow in `gl4es_glBitmap`: a write 48 bytes
 (12 pixels, the yellow case's `sx`) before the CPU bitmap buffer. A plain build
 of master aborts with `free(): invalid pointer`.

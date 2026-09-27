@@ -20,6 +20,10 @@ build.sh           build.sh <demo> [ref-A] [ref-B] [web|native|all]
 site/NN-<patch>/   the built A/B page (index.html, a/, b/)
 ```
 
+Hosted at **https://drewwoods.github.io/gl4es-ab/**: every push to `main` that
+changes `site/` publishes it (`.github/workflows/pages.yml`). To update a page,
+rebuild it with `build.sh` and commit `site/`.
+
 ## Building
 
 gl4es is built from `$GL4ES_REPO` (default `../gl4es`) at each ref with

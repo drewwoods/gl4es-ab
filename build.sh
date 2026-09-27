@@ -5,7 +5,8 @@
 # against each. Refs not given come from demos/<demo>/refs (REF_A=, REF_B=).
 #   web     (default)  site/<demo>/{index.html,a/,b/}       needs emcc
 #   native             out/native/<demo>/{a,b,ref} + PNGs    needs Linux + Mesa
-# gl4es builds are cached per commit under out/gl4es/<sha>/<target>.
+# gl4es builds are cached per commit under out/gl4es/<sha>/<target>, and built
+# with -ffile-prefix-map so no local paths end up in the published pages.
 # SANITIZE=address (native only) builds gl4es and the demo with ASan.
 # AB_BUILD_ONLY=1 (native only) links the binaries without running them.
 set -euo pipefail
@@ -88,11 +89,12 @@ build_gl4es() {
             cd "$root/$kind"
             case $kind in
             web)    emcmake cmake ../src -DNOX11=ON -DNOEGL=ON -DSTATICLIB=ON \
-                        -DCMAKE_BUILD_TYPE=RelWithDebInfo
+                        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+                        -DCMAKE_C_FLAGS="-ffile-prefix-map=$root/src/=gl4es/"
                     emmake make -j"$JOBS" ;;
             native*) cmake ../src -DNOX11=ON -DNOEGL=ON -DSTATICLIB=ON \
                         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-                        ${SANITIZE:+-DCMAKE_C_FLAGS="-fsanitize=$SANITIZE -fno-omit-frame-pointer"}
+                        -DCMAKE_C_FLAGS="-ffile-prefix-map=$root/src/=gl4es/${SANITIZE:+ -fsanitize=$SANITIZE -fno-omit-frame-pointer}"
                     make -j"$JOBS" ;;
             esac
         ) >"$root/$kind.log" 2>&1 || { echo "gl4es $sha ($kind) failed, see $root/$kind.log" >&2; exit 1; }
@@ -167,7 +169,8 @@ build_web() {
     for side in a b; do
         if [ $side = a ]; then ref=$ref_a sha=$sha_a; else ref=$ref_b sha=$sha_b; fi
         lib=$(build_gl4es "$sha" web)
-        emcc -O2 -I"$here/harness" -I"$here/out/gl4es/$sha/src/include" \
+        # Relative __FILE__ paths: the pages are published.
+        emcc -O2 -ffile-prefix-map="$here/"= -I"$here/harness" -I"$here/out/gl4es/$sha/src/include" \
             -include "$here/out/gl4es/$sha/src/include/GL/gl.h" \
             -DAB_SIDE="\"$side\"" -DAB_REF="\"$(label "$ref")\"" -DAB_SHA="\"${sha:0:10}\"" \
             "$here/harness/web.c" "$here/harness/common.c" "$demo_dir/main.c" \
