@@ -1,6 +1,5 @@
 # Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
-# A: 31e498b0 "src/gl: Fix glBitmap clipping at the viewport's left edge"
-#    (patch #1's parent; master once that fix has merged)
-# B: 488cc3a6 "[rasterpos-perspective-divide] Fix glRasterPos3f ..."
-REF_A=31e498b02c8ae1c3481b9c8510b12f356efa63d8
-REF_B=488cc3a65082adba1676d3eea9b52f2710e455d6
+# A: 0f7c7c81 upstream master (includes the glBitmap left-edge fix, #516)
+# B: e9d6b1e8 "src/gl: Fix glRasterPos3f under a perspective projection"
+REF_A=0f7c7c811c6523a89e914354103413a858cf379e
+REF_B=e9d6b1e850eaf73006cf3245f12d3ad9f572e4fd

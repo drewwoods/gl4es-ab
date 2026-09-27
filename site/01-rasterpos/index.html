@@ -48,11 +48,11 @@
 <body>
 <main>
   <h1>01 · glRasterPos3f under a perspective projection</h1>
-  <div class="refs">A = original, 31e498b02c · B = patched, 488cc3a650</div>
+  <div class="refs">A = original, 0f7c7c811c · B = patched, e9d6b1e850</div>
   <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/01-rasterpos">demos/01-rasterpos</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/01-rasterpos/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/01-rasterpos/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/01-rasterpos/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
-    <figure><figcaption>A · original <code>31e498b02c</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
-    <figure><figcaption>B · patched <code>488cc3a650</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+    <figure><figcaption>A · original <code>0f7c7c811c</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
+    <figure><figcaption>B · patched <code>e9d6b1e850</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <div class="controls">
     <label><input type="checkbox" id="freeze"> Freeze both at</label>
@@ -62,12 +62,12 @@
   <div class="params" id="params" hidden></div>
   <section class="commits">
     <h2>What changes from A to B</h2>
-<p>A is <a href="https://github.com/drewwoods/gl4es/commit/31e498b02c8ae1c3481b9c8510b12f356efa63d8"><code>31e498b02c</code></a> src/gl: Fix glBitmap clipping at the viewport's left edge</p>
+<p>A is <a href="https://github.com/drewwoods/gl4es/commit/0f7c7c811c6523a89e914354103413a858cf379e"><code>0f7c7c811c</code></a> Merge pull request #516 from drewwoods/fix-bitmap-left-clip</p>
 <p>B adds these commits:</p>
 <ol>
-<li><a href="https://github.com/drewwoods/gl4es/commit/488cc3a65082adba1676d3eea9b52f2710e455d6"><code>488cc3a650</code></a> [rasterpos-perspective-divide] Fix glRasterPos3f in gl4es to perspective-divide by the clip-space w</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/e9d6b1e850eaf73006cf3245f12d3ad9f572e4fd"><code>e9d6b1e850</code></a> src/gl: Fix glRasterPos3f under a perspective projection</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/31e498b02c8a...488cc3a65082">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/0f7c7c811c65...e9d6b1e850ea">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and
