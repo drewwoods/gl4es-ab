@@ -11,7 +11,20 @@
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
-demo=${1:?usage: crashtest.sh <demo> [ref-A] [ref-B]}
+. "$here/harness/demos.sh"
+case ${1:-} in
+''|-h|--help)
+    echo "usage: crashtest.sh <demo> [ref-A] [ref-B]      (Linux + Mesa)"
+    echo
+    echo "Builds both sides with AddressSanitizer; PASS when A reports a memory"
+    echo "error and B runs clean. Refs default to demos/<demo>/refs."
+    echo
+    echo "demos (default A -> B):"
+    list_demos "${GL4ES_REPO:-$here/../gl4es}" "$here"
+    [ -n "${1:-}" ]; exit ;;
+esac
+demo=$1
+[ -f "$here/demos/$demo/main.c" ] || { echo "no such demo: $demo" >&2; exit 1; }
 default_ref() { sed -n "s/^$1=//p" "$here/demos/$demo/refs" 2>/dev/null; }
 ref_a=${2:-$(default_ref REF_A)}
 ref_b=${3:-$(default_ref REF_B)}

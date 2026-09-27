@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build.sh <demo> [ref-A] [ref-B] [web|native|all]
+# build.sh <demo> [ref-A] [ref-B] [web|native|all]      (build.sh -h for help)
 #
 # Builds gl4es at two refs of $GL4ES_REPO and links demos/<demo>/main.c
 # against each. Refs not given come from demos/<demo>/refs (REF_A=, REF_B=).
@@ -11,8 +11,48 @@
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
-usage="usage: build.sh <demo> [ref-A] [ref-B] [web|native|all]"
-demo=${1:?$usage}
+GL4ES_REPO=${GL4ES_REPO:-$(cd "$here/.." && pwd)/gl4es}
+JOBS=${JOBS:-2}
+. "$here/harness/demos.sh"
+
+usage() {
+    cat <<USAGE
+usage: build.sh <demo> [ref-A] [ref-B] [web|native|all]
+
+Builds gl4es at ref-A and ref-B (default: demos/<demo>/refs) and the demo
+against each.
+
+demos (default A -> B):
+$(list_demos "$GL4ES_REPO" "$here")
+
+targets:
+  web      (default) site/<demo>/ A/B page; needs emcc (source emsdk_env.sh)
+  native   out/native/<demo>/{ref,a,b}.png, headless; needs Linux + Mesa
+  all      both
+
+environment:
+  GL4ES_REPO=<dir>     gl4es checkout (now: $GL4ES_REPO)
+  JOBS=<n>             parallel make jobs (now: $JOBS)
+  SANITIZE=address     native: build gl4es and the demo with ASan
+  AB_BUILD_ONLY=1      native: link, don't run
+  AB_FRAME_T=<s>       native: time to render the screenshot at (default 1)
+  GL4ES_WEB_URL=<url>  GitHub base for the gl4es commit links (default: origin)
+  AB_WEB_URL=<url>     GitHub base for the demo source links (default: origin)
+
+see also:
+  crashtest.sh <demo> [ref-A] [ref-B]   ASan A/B verdict (Linux)
+  run-x11.sh <demo> [--t <s>]           ref, A, B in X11 windows (Linux)
+
+examples:
+  ./build.sh 01-rasterpos                      web page, default refs
+  ./build.sh 01-rasterpos master my-branch     web page, other refs
+  JOBS=2 ./build.sh 01-rasterpos native        headless screenshots
+USAGE
+}
+case ${1:-} in
+''|-h|--help) usage; [ -n "${1:-}" ]; exit ;;
+esac
+demo=$1
 shift
 target=web
 refs=()
@@ -22,12 +62,10 @@ for arg in "$@"; do
     *)              refs+=("$arg") ;;
     esac
 done
-[ ${#refs[@]} -le 2 ] || { echo "$usage" >&2; exit 1; }
-GL4ES_REPO=${GL4ES_REPO:-$here/../gl4es}
-JOBS=${JOBS:-2}
+[ ${#refs[@]} -le 2 ] || { usage >&2; exit 1; }
 
 demo_dir=$here/demos/$demo
-[ -f "$demo_dir/main.c" ] || { echo "no such demo: $demo_dir/main.c" >&2; exit 1; }
+[ -f "$demo_dir/main.c" ] || { echo "no such demo: $demo" >&2; echo "demos:" >&2; list_demos "$GL4ES_REPO" "$here" >&2; exit 1; }
 default_ref() { sed -n "s/^$1=//p" "$demo_dir/refs" 2>/dev/null; }
 ref_a=${refs[0]:-$(default_ref REF_A)}
 ref_b=${refs[1]:-$(default_ref REF_B)}

@@ -1,4 +1,4 @@
-/* bitmap-left-clip: glBitmap bitmaps that cross the window's left edge.
+/* 00-bitmap-left-clip: glBitmap bitmaps that cross the window's left edge.
  *
  * The same 32x32 "F" is drawn four times with glBitmap. A grey outline,
  * drawn with GL_LINE_LOOP, marks the full box each bitmap would cover.

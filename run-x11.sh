@@ -7,7 +7,19 @@
 # Close a window, or press Esc or q in it, to quit that one.
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
-demo=${1:?usage: run-x11.sh <demo> [--t <seconds>] [--frames <n>]}
+. "$here/harness/demos.sh"
+case ${1:-} in
+''|-h|--help)
+    echo "usage: run-x11.sh <demo> [--t <seconds>] [--frames <n>]      (Linux, X11)"
+    echo
+    echo "Opens ref, A and B side by side on \$DISPLAY (default :0). Build them"
+    echo "first with ./build.sh <demo> native."
+    echo
+    echo "demos (default A -> B):"
+    list_demos "${GL4ES_REPO:-$here/../gl4es}" "$here"
+    [ -n "${1:-}" ]; exit ;;
+esac
+demo=$1
 shift
 out=$here/out/native/$demo
 export DISPLAY=${DISPLAY:-:0} LIBGL_NOBANNER=1
