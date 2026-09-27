@@ -91,8 +91,8 @@ fi
 if [ -n "$(git status --porcelain -- site)" ]; then
     say "Committing site/"
     git add -A site
-    names=${demos[*]:-site}
-    git commit -q -m "site: rebuild ${names// /, }" -- site
+    if [ ${#demos[@]} -gt 0 ]; then msg="site: rebuild $(IFS=,; echo "${demos[*]}" | sed "s/,/, /g")"; else msg="site: update"; fi
+    git commit -q -m "$msg" -- site
     git log --oneline -1 | sed 's/^/    /'
 fi
 before=$(git rev-parse origin/main)
