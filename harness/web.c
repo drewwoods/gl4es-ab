@@ -14,6 +14,7 @@
 static double frozen_t = -1.0;
 
 EMSCRIPTEN_KEEPALIVE void ab_set_time(double t) { frozen_t = t; }
+EMSCRIPTEN_KEEPALIVE void ab_web_set_param(int i, double v) { ab_set_param_index(i, (float)v); }
 
 static void tick(void)
 {
@@ -55,6 +56,18 @@ int main(void)
         });
         return t === null ? -1 : parseFloat(t);
     });
+    /* Adjustable values: tell the A/B page what they are, and take {param, value}
+     * messages from it. The page answers with its current values, so both
+     * sides start from the same state. */
+    EM_ASM({
+        var params = JSON.parse(UTF8ToString($0));
+        window.addEventListener('message', function(e) {
+            if (e.data && typeof e.data.param === 'number')
+                Module._ab_web_set_param(e.data.param, e.data.value);
+        });
+        if (params.length && window.parent !== window)
+            window.parent.postMessage({ abParams: params }, '*');
+    }, ab_params_json());
     emscripten_set_main_loop(tick, 0, 0);
     return 0;
 }

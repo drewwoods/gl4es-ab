@@ -5,13 +5,14 @@
  *   -DAB_DESKTOP_GL:    desktop GL compatibility context, no gl4es; the
  *                       reference for what the GL spec expects.
  *
- * usage: <demo> [--t <seconds>] [--frames <n>] [--screenshot <file.ppm>]
- *        <demo> --window [--x <pos>] [--t <seconds>] [--frames <n>]
+ * usage: <demo> [--t <seconds>] [--frames <n>] [--screenshot <file.ppm>] [--set <name>=<value>]...
+ *        <demo> --window [--x <pos>] [--t <seconds>] [--frames <n>] [--set <name>=<value>]...
  * Headless: draws <n> frames (default 1) at time t (default 1.0), reports the
  * average draw time, and optionally saves the last frame.
  * --window: an AB_W x AB_H X11 window at x = <pos> on $DISPLAY, animated by
  * the wall clock (like the web page, so several windows stay in step) unless
- * --t fixes the time. Runs until closed, Esc or q, or for <n> frames. */
+ * --t fixes the time. Runs until closed, Esc or q, or for <n> frames.
+ * --set changes a value the demo registered with ab_param(). */
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -144,6 +145,8 @@ int main(int argc, char **argv)
     double t = -1.0; /* < 0: headless default 1.0, windowed wall clock */
     int frames = -1, win_x = -1;
     const char *shot = NULL;
+    const char *sets[16];
+    int nsets = 0;
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--window"))
             win_x = win_x < 0 ? 0 : win_x;
@@ -157,6 +160,8 @@ int main(int argc, char **argv)
             frames = atoi(argv[++i]);
         else if (!strcmp(argv[i], "--screenshot"))
             shot = argv[++i];
+        else if (!strcmp(argv[i], "--set") && nsets < 16)
+            sets[nsets++] = argv[++i];
     }
     int windowed = win_x >= 0;
     if (!windowed && t < 0)
@@ -169,6 +174,19 @@ int main(int argc, char **argv)
     initialize_gl4es(); /* no-op if gl4es's constructor already ran */
 #endif
     demo_init();
+    for (int i = 0; i < nsets; i++) {
+        char name[64];
+        const char *eq = strchr(sets[i], '=');
+        int len = eq ? (int)(eq - sets[i]) : 0;
+        if (len > 0 && len < (int)sizeof name) {
+            memcpy(name, sets[i], len);
+            name[len] = 0;
+            if (ab_set_param(name, (float)atof(eq + 1)))
+                continue;
+        }
+        fprintf(stderr, "--set %s: no such value; this demo has %s\n", sets[i], ab_params_json());
+        return 1;
+    }
     for (int i = 0; frames < 0 || i < frames; i++) {
         if (windowed && !pump_events())
             break;

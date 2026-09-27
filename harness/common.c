@@ -41,6 +41,57 @@ void ab_frame(double t)
     }
 }
 
+#define AB_MAX_PARAMS 16
+static struct {
+    const char *name;
+    GLfloat *value;
+    float min, max, step;
+} params[AB_MAX_PARAMS];
+static int nparams;
+
+void ab_param(const char *name, GLfloat *value, float min, float max, float step)
+{
+    if (nparams == AB_MAX_PARAMS)
+        return;
+    params[nparams].name = name;
+    params[nparams].value = value;
+    params[nparams].min = min;
+    params[nparams].max = max;
+    params[nparams].step = step;
+    nparams++;
+}
+
+int ab_set_param(const char *name, float value)
+{
+    for (int i = 0; i < nparams; i++)
+        if (!strcmp(params[i].name, name)) {
+            *params[i].value = value;
+            return 1;
+        }
+    return 0;
+}
+
+void ab_set_param_index(int i, float value)
+{
+    if (i >= 0 && i < nparams)
+        *params[i].value = value;
+}
+
+/* [{"name":..,"value":..,"min":..,"max":..,"step":..}, ...] for the web page.
+ * Names are plain identifiers, so they need no escaping. */
+const char *ab_params_json(void)
+{
+    static char json[AB_MAX_PARAMS * 128];
+    int n = snprintf(json, sizeof json, "[");
+    for (int i = 0; i < nparams; i++)
+        n += snprintf(json + n, sizeof json - n,
+                      "%s{\"name\":\"%s\",\"value\":%g,\"min\":%g,\"max\":%g,\"step\":%g}",
+                      i ? "," : "", params[i].name, *params[i].value,
+                      params[i].min, params[i].max, params[i].step);
+    snprintf(json + n, sizeof json - n, "]");
+    return json;
+}
+
 const char *ab_status(void)
 {
     if (draw_ms_avg == 0 && draw_ms_n)

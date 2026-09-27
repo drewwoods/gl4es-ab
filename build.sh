@@ -116,7 +116,8 @@ title=$(sed -n 's/^# *//p;q' "$demo_dir/README.md" 2>/dev/null || echo "$demo")
 # Where the commits can be browsed: $GL4ES_WEB_URL, else the checkout's
 # origin remote if it's on GitHub.
 github_url() { # github_url <repo dir>  ->  https://github.com/owner/name, if origin is GitHub
-    git -C "$1" remote get-url origin 2>/dev/null \
+    # Empty (not an error) outside a git checkout or without an origin remote.
+    { git -C "$1" remote get-url origin 2>/dev/null || true; } \
         | sed -nE 's#^(git@github\.com:|https://github\.com/)([^/]+/[^/]+)$#https://github.com/\2#p' \
         | sed 's/\.git$//'
 }

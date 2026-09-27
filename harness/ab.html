@@ -29,6 +29,13 @@
   iframe { display: block; width: 100%; aspect-ratio: 480 / 410; border: 0; }
   .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0; }
   .controls input[type=range] { flex: 1; min-width: 160px; }
+  .params { display: grid; grid-template-columns: max-content 1fr 4em; gap: 6px 12px;
+            align-items: center; margin: 0 0 16px; }
+  .params[hidden] { display: none; }
+  .params label { font: 13px ui-monospace, Menlo, monospace; }
+  .params output { font: 13px ui-monospace, Menlo, monospace; text-align: right; }
+  .params .row { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; }
+  .params .hint { color: var(--muted); font-size: 13px; }
   .notes, .commits { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 8px; }
   h2 { font-size: 16px; margin: 4px 0 8px; }
   .commits p, .commits ol { margin: 6px 0; }
@@ -52,6 +59,7 @@
     <input type="range" id="t" min="0" max="60" step="0.01" value="0">
     <output id="tv">0.00 s</output>
   </div>
+  <div class="params" id="params" hidden></div>
   <section class="commits">
     <h2>What changes from A to B</h2>
 @COMMITS@
@@ -73,6 +81,84 @@
     });
   }
   freeze.addEventListener('change', send);
+
+  // Values the demo registered with ab_param(): each side announces them;
+  // the first announcement builds the sliders, and every side that announces
+  // gets the current values back, so A and B always agree. Non-default values
+  // live in the URL hash, so a position can be linked.
+  var params = null, values = {};
+  var frames = function() { return document.querySelectorAll('iframe'); };
+  function sendParam(i, target) {
+    var msg = { param: i, value: values[params[i].name] };
+    if (target) target.postMessage(msg, '*');
+    else frames().forEach(function(f) { f.contentWindow.postMessage(msg, '*'); });
+  }
+  function saveHash() {
+    var h = new URLSearchParams();
+    params.forEach(function(p) { if (values[p.name] !== p.value) h.set(p.name, values[p.name]); });
+    var s = h.toString();
+    history.replaceState(null, '', s ? '#' + s : location.pathname + location.search);
+  }
+  function buildParams(list) {
+    params = list;
+    var hash = new URLSearchParams(location.hash.slice(1));
+    var box = document.getElementById('params');
+    var inputs = [];
+    list.forEach(function(p, i) {
+      var v = hash.has(p.name) ? parseFloat(hash.get(p.name)) : p.value;
+      values[p.name] = v;
+      var label = document.createElement('label');
+      label.textContent = p.name;
+      label.htmlFor = 'param-' + i;
+      var range = document.createElement('input');
+      range.type = 'range'; range.id = 'param-' + i;
+      range.min = p.min; range.max = p.max; range.step = p.step; range.value = v;
+      var out = document.createElement('output');
+      out.textContent = v;
+      range.addEventListener('input', function() {
+        values[p.name] = parseFloat(range.value);
+        out.textContent = range.value;
+        sendParam(i);
+        saveHash();
+      });
+      inputs.push({ range: range, out: out, p: p });
+      paramInputs = inputs;
+      box.append(label, range, out);
+    });
+    var row = document.createElement('div');
+    row.className = 'row';
+    var reset = document.createElement('button');
+    reset.textContent = 'Reset';
+    reset.addEventListener('click', function() {
+      inputs.forEach(function(x, i) {
+        values[x.p.name] = x.p.value; x.range.value = x.p.value; x.out.textContent = x.p.value;
+        sendParam(i);
+      });
+      saveHash();
+    });
+    var hint = document.createElement('span');
+    hint.className = 'hint';
+    hint.textContent = 'Both sides get the same values; the URL keeps them.';
+    row.append(reset, hint);
+    box.append(row);
+    box.hidden = false;
+  }
+  // Editing the hash (or following a link to another position) applies it.
+  var paramInputs = [];
+  window.addEventListener('hashchange', function() {
+    if (!params) return;
+    var hash = new URLSearchParams(location.hash.slice(1));
+    paramInputs.forEach(function(x, i) {
+      var v = hash.has(x.p.name) ? parseFloat(hash.get(x.p.name)) : x.p.value;
+      values[x.p.name] = v; x.range.value = v; x.out.textContent = v;
+      sendParam(i);
+    });
+  });
+  window.addEventListener('message', function(e) {
+    if (!e.data || !e.data.abParams) return;
+    if (!params) buildParams(e.data.abParams);
+    params.forEach(function(p, i) { sendParam(i, e.source); });
+  });
   t.addEventListener('input', function() { freeze.checked = true; send(); });
 </script>
 </body>

@@ -29,7 +29,15 @@ void ab_report(const char *fmt, ...);
  * the matrix mode as GL_MODELVIEW and the raster position after the text. */
 void ab_label(int x, int y, const char *s);
 
+/* A value the viewer can adjust, registered from demo_init(). The A/B page
+ * shows a slider for it and sets it on both sides at once (and keeps it in
+ * the page URL); natively, --set <name>=<value>. At most 16. */
+void ab_param(const char *name, GLfloat *value, float min, float max, float step);
+
 /* Internal: shared between common.c and the web/native hosts. */
+int ab_set_param(const char *name, float value);  /* 0 if there's no such param */
+void ab_set_param_index(int i, float value);
+const char *ab_params_json(void);
 #ifndef AB_DESKTOP_GL
 /* gl4es's swap hooks for hosts without glX/EGL (-DNOX11 -DNOEGL builds).
  * pre_swap flushes what gl4es still queues on the CPU, such as glBitmap
