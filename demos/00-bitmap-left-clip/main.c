@@ -6,8 +6,8 @@
  * within its outline:
  *   green   fully inside (control)
  *   cyan    crossing the left edge: the right 20 columns show
- *   yellow  crossing only the bottom edge, at x > 0: the top 20 rows show,
- *           in A as well: only the left edge is mis-clipped
+ *   yellow  crossing only the right edge: the left 20 columns show, in A as
+ *           well: only the left edge is mis-clipped
  *   orange  crossing the bottom-left corner: the top-right 20x20 shows (on
  *           master this one writes before the start of the bitmap buffer)
  *   red     adjustable (red.x, red.y, red.xorig, red.yorig); starts entirely
@@ -19,7 +19,7 @@
 #define F 32
 static GLubyte glyph[F * F / 8];
 
-enum { INSIDE, LEFT, BOTTOM, CORNER, MOVABLE, NCASES };
+enum { INSIDE, LEFT, RIGHT, CORNER, MOVABLE, NCASES };
 
 /* x, y: raster position; xorig, yorig: glBitmap origin, so the F's box
  * starts at (x - xorig, y - yorig). */
@@ -29,7 +29,7 @@ static struct {
 } cases[NCASES] = {
     [INSIDE]  = { .x = 200, .y = 160,                            .r = 0.3f, .g = 0.9f,  .b = 0.4f },
     [LEFT]    = { .x =   8, .y = 200, .xorig = 20,               .r = 0.2f, .g = 0.8f,  .b = 0.9f },
-    [BOTTOM]  = { .x = 460, .y = 200,              .yorig = 20,  .r = 1.0f, .g = 0.85f, .b = 0.2f },
+    [RIGHT]   = { .x = 460, .y = 200,              .yorig = 20,  .r = 1.0f, .g = 0.85f, .b = 0.2f },
     [CORNER]  = { .x =   8, .y =   8, .xorig = 20, .yorig = 20,  .r = 1.0f, .g = 0.55f, .b = 0.1f },
     [MOVABLE] = { .x =   8, .y = 100, .xorig = 60,               .r = 1.0f, .g = 0.25f, .b = 0.2f },
 };
