@@ -1,8 +1,8 @@
 # Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
 # A: 6f1c61f4 "src/gl: Clear only the dirty part of glBitmap's buffer between batches"
 #    (this patch's parent)
-# B: 585cd47e "src/gl: Answer more glGet* queries from gl4es's own state"
+# B: 4af787ad "src/gl: Answer more glGet* queries from gl4es's own state"
 REF_A=6f1c61f4e8167f5d97d0a98edfc9f39c2142d9e2
-REF_B=585cd47e9732382a1a34f8b897bb6496109cfb61
+REF_B=4af787ad0837de7e97a8cff333ebefa0c2072756
 # A performance patch: the page leads with the frame times.
 PERF=1
