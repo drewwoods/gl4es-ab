@@ -29,7 +29,7 @@ static struct {
 } cases[NCASES] = {
     [INSIDE]  = { .x = 200, .y = 160,                            .r = 0.3f, .g = 0.9f,  .b = 0.4f },
     [LEFT]    = { .x =   8, .y = 200, .xorig = 20,               .r = 0.2f, .g = 0.8f,  .b = 0.9f },
-    [BOTTOM]  = { .x = 100, .y =   8,              .yorig = 20,  .r = 1.0f, .g = 0.85f, .b = 0.2f },
+    [BOTTOM]  = { .x = 460, .y = 200,              .yorig = 20,  .r = 1.0f, .g = 0.85f, .b = 0.2f },
     [CORNER]  = { .x =   8, .y =   8, .xorig = 20, .yorig = 20,  .r = 1.0f, .g = 0.55f, .b = 0.1f },
     [MOVABLE] = { .x =   8, .y = 100, .xorig = 60,               .r = 1.0f, .g = 0.25f, .b = 0.2f },
 };
