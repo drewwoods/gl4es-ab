@@ -48,11 +48,11 @@
 <body>
 <main>
   <h1>01 · glRasterPos3f under a perspective projection</h1>
-  <div class="refs">A = 98dd9cdc44 · B = 9022301a53</div>
+  <div class="refs">A = 31e498b02c · B = 488cc3a650</div>
   <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/01-rasterpos">demos/01-rasterpos</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/01-rasterpos/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/01-rasterpos/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/01-rasterpos/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
-    <figure><figcaption>A <code>98dd9cdc44</code></figcaption><iframe src="a/index.html" title="A"></iframe></figure>
-    <figure><figcaption>B <code>9022301a53</code></figcaption><iframe src="b/index.html" title="B"></iframe></figure>
+    <figure><figcaption>A <code>31e498b02c</code></figcaption><iframe src="a/index.html" title="A"></iframe></figure>
+    <figure><figcaption>B <code>488cc3a650</code></figcaption><iframe src="b/index.html" title="B"></iframe></figure>
   </div>
   <div class="controls">
     <label><input type="checkbox" id="freeze"> Freeze both at</label>
@@ -62,12 +62,12 @@
   <div class="params" id="params" hidden></div>
   <section class="commits">
     <h2>What changes from A to B</h2>
-<p>A is <a href="https://github.com/drewwoods/gl4es/commit/98dd9cdc44134de4d7f8af284985249d09ec4ff8"><code>98dd9cdc44</code></a> src/gl: Fix glBitmap clipping at the viewport's left edge</p>
+<p>A is <a href="https://github.com/drewwoods/gl4es/commit/31e498b02c8ae1c3481b9c8510b12f356efa63d8"><code>31e498b02c</code></a> src/gl: Fix glBitmap clipping at the viewport's left edge</p>
 <p>B adds these commits:</p>
 <ol>
-<li><a href="https://github.com/drewwoods/gl4es/commit/9022301a53586a6b5da5a3f5fd2bf98308380822"><code>9022301a53</code></a> [rasterpos-perspective-divide] Fix glRasterPos3f in gl4es to perspective-divide by the clip-space w</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/488cc3a65082adba1676d3eea9b52f2710e455d6"><code>488cc3a650</code></a> [rasterpos-perspective-divide] Fix glRasterPos3f in gl4es to perspective-divide by the clip-space w</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/98dd9cdc4413...9022301a5358">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/31e498b02c8a...488cc3a65082">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and
@@ -127,6 +127,7 @@
         saveHash();
       });
       inputs.push({ range: range, out: out, p: p });
+      paramInputs = inputs;
       box.append(label, range, out);
     });
     var row = document.createElement('div');
@@ -147,6 +148,17 @@
     box.append(row);
     box.hidden = false;
   }
+  // Editing the hash (or following a link to another position) applies it.
+  var paramInputs = [];
+  window.addEventListener('hashchange', function() {
+    if (!params) return;
+    var hash = new URLSearchParams(location.hash.slice(1));
+    paramInputs.forEach(function(x, i) {
+      var v = hash.has(x.p.name) ? parseFloat(hash.get(x.p.name)) : x.p.value;
+      values[x.p.name] = v; x.range.value = v; x.out.textContent = v;
+      sendParam(i);
+    });
+  });
   window.addEventListener('message', function(e) {
     if (!e.data || !e.data.abParams) return;
     if (!params) buildParams(e.data.abParams);

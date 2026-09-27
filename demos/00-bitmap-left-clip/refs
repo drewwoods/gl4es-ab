@@ -1,5 +1,5 @@
 # Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
 # A: master, 81547d98 "Merge pull request #513 from FWGS/master"
-# B: 98dd9cdc "src/gl: Fix glBitmap clipping at the viewport's left edge"
+# B: 31e498b0 "src/gl: Fix glBitmap clipping at the viewport's left edge"
 REF_A=81547d986798e876de8b434193920b606a72363f
-REF_B=98dd9cdc44134de4d7f8af284985249d09ec4ff8
+REF_B=31e498b02c8ae1c3481b9c8510b12f356efa63d8
