@@ -61,9 +61,11 @@ so this demo never crosses the left edge.
 
 ## Running it
 
+A and B default to the SHAs in `refs`; pass `[ref-A] [ref-B]` to override.
+
 ```
-./build.sh 01-rasterpos master <patch-ref> web      # site/01-rasterpos/
-./build.sh 01-rasterpos master <patch-ref> native   # Linux + Mesa; out/native/01-rasterpos/
+./build.sh 01-rasterpos web      # site/01-rasterpos/
+./build.sh 01-rasterpos native   # Linux + Mesa; out/native/01-rasterpos/
 ./run-x11.sh 01-rasterpos                          # ref, A, B in X11 windows, side by side
 ```
 

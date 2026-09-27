@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# build.sh <demo> <ref-A> <ref-B> [web|native|all]
+# build.sh <demo> [ref-A] [ref-B] [web|native|all]
 #
 # Builds gl4es at two refs of $GL4ES_REPO and links demos/<demo>/main.c
-# against each.
+# against each. Refs not given come from demos/<demo>/refs (REF_A=, REF_B=).
 #   web     (default)  site/<demo>/{index.html,a/,b/}       needs emcc
 #   native             out/native/<demo>/{a,b,ref} + PNGs    needs Linux + Mesa
 # gl4es builds are cached per commit under out/gl4es/<sha>/<target>.
@@ -11,15 +11,27 @@
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
-demo=${1:?usage: build.sh <demo> <ref-A> <ref-B> [web|native|all]}
-ref_a=${2:?ref-A}
-ref_b=${3:?ref-B}
-target=${4:-web}
+usage="usage: build.sh <demo> [ref-A] [ref-B] [web|native|all]"
+demo=${1:?$usage}
+shift
+target=web
+refs=()
+for arg in "$@"; do
+    case $arg in
+    web|native|all) target=$arg ;;
+    *)              refs+=("$arg") ;;
+    esac
+done
+[ ${#refs[@]} -le 2 ] || { echo "$usage" >&2; exit 1; }
 GL4ES_REPO=${GL4ES_REPO:-$here/../gl4es}
 JOBS=${JOBS:-2}
 
 demo_dir=$here/demos/$demo
 [ -f "$demo_dir/main.c" ] || { echo "no such demo: $demo_dir/main.c" >&2; exit 1; }
+default_ref() { sed -n "s/^$1=//p" "$demo_dir/refs" 2>/dev/null; }
+ref_a=${refs[0]:-$(default_ref REF_A)}
+ref_b=${refs[1]:-$(default_ref REF_B)}
+[ -n "$ref_a" ] && [ -n "$ref_b" ] || { echo "no refs given and none in $demo_dir/refs" >&2; exit 1; }
 
 sha_of() { git -C "$GL4ES_REPO" rev-parse --verify "$1^{commit}"; }
 
@@ -55,7 +67,39 @@ build_gl4es() {
 
 sha_a=$(sha_of "$ref_a")
 sha_b=$(sha_of "$ref_b")
+# A full or abbreviated SHA is shown short; a branch or tag name as given.
+label() { if [[ $1 =~ ^[0-9a-f]{7,40}$ ]]; then echo "${1:0:10}"; else echo "$1"; fi; }
+label_a=$(label "$ref_a")
+label_b=$(label "$ref_b")
 title=$(sed -n 's/^# *//p;q' "$demo_dir/README.md" 2>/dev/null || echo "$demo")
+
+# Where the commits can be browsed: $GL4ES_WEB_URL, else the checkout's
+# origin remote if it's on GitHub.
+web_url=${GL4ES_WEB_URL:-$(git -C "$GL4ES_REPO" remote get-url origin 2>/dev/null \
+    | sed -nE 's#^(git@github\.com:|https://github\.com/)([^/]+/[^/]+)$#https://github.com/\2#p' \
+    | sed 's/\.git$//')}
+
+html_escape() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/"/\&quot;/g'; }
+
+# The A/B page's commit section: A itself, then every commit in A..B.
+commits_html() {
+    local subj
+    commit_link() { # commit_link <sha>  ->  <code>sha</code>, linked when web_url is known
+        if [ -n "$web_url" ]; then echo "<a href=\"$web_url/commit/$1\"><code>${1:0:10}</code></a>"
+        else echo "<code>${1:0:10}</code>"; fi
+    }
+    subj=$(git -C "$GL4ES_REPO" log -1 --format=%s "$sha_a" | html_escape)
+    echo "<p>A is $(commit_link "$sha_a") $subj</p>"
+    echo "<p>B adds these commits:</p>"
+    echo "<ol>"
+    git -C "$GL4ES_REPO" log --reverse --format='%H %s' "$sha_a..$sha_b" | while read -r sha s; do
+        echo "<li>$(commit_link "$sha") $(echo "$s" | html_escape)</li>"
+    done
+    echo "</ol>"
+    if [ -n "$web_url" ]; then
+        echo "<p><a href=\"$web_url/compare/${sha_a:0:12}...${sha_b:0:12}\">Full diff A...B on GitHub</a></p>"
+    fi
+}
 
 build_web() {
     local out=$here/site/$demo
@@ -66,16 +110,21 @@ build_web() {
         lib=$(build_gl4es "$sha" web)
         emcc -O2 -I"$here/harness" -I"$here/out/gl4es/$sha/src/include" \
             -include "$here/out/gl4es/$sha/src/include/GL/gl.h" \
-            -DAB_SIDE="\"$side\"" -DAB_REF="\"$ref\"" -DAB_SHA="\"${sha:0:10}\"" \
+            -DAB_SIDE="\"$side\"" -DAB_REF="\"$(label "$ref")\"" -DAB_SHA="\"${sha:0:10}\"" \
             "$here/harness/web.c" "$here/harness/common.c" "$demo_dir/main.c" \
             "$lib" -sUSE_WEBGL2=1 -sFULL_ES2=1 \
             -sALLOW_MEMORY_GROWTH=1 --shell-file "$here/harness/shell.html" \
             -o "$out/$side/index.html"
     done
+    local commits=$here/out/commits-$demo.html
+    mkdir -p "$here/out"
+    commits_html >"$commits"
     sed -e "s|@TITLE@|$title|g" -e "s|@DEMO@|$demo|g" \
-        -e "s|@REF_A@|$ref_a|g" -e "s|@SHA_A@|${sha_a:0:10}|g" \
-        -e "s|@REF_B@|$ref_b|g" -e "s|@SHA_B@|${sha_b:0:10}|g" \
-        "$here/harness/ab.html" >"$out/index.html"
+        -e "s|@REF_A@|$label_a|g" -e "s|@SHA_A@|${sha_a:0:10}|g" \
+        -e "s|@REF_B@|$label_b|g" -e "s|@SHA_B@|${sha_b:0:10}|g" \
+        "$here/harness/ab.html" \
+        | awk -v f="$commits" '/@COMMITS@/ { while ((getline l < f) > 0) print l; next } { print }' \
+        >"$out/index.html"
     [ -f "$demo_dir/README.md" ] && cp "$demo_dir/README.md" "$out/README.md"
     echo "web: $out/index.html"
 }
@@ -93,7 +142,7 @@ build_native() {
         if [ $side = a ]; then ref=$ref_a sha=$sha_a; else ref=$ref_b sha=$sha_b; fi
         lib=$(build_gl4es "$sha" "$kind")
         $cc -I"$here/out/gl4es/$sha/src/include" "${flags[@]}" \
-            -DAB_SIDE="\"$side\"" -DAB_REF="\"$ref\"" -DAB_SHA="\"${sha:0:10}\"" \
+            -DAB_SIDE="\"$side\"" -DAB_REF="\"$(label "$ref")\"" -DAB_SHA="\"${sha:0:10}\"" \
             "$lib" -lEGL -lX11 -ldl -lm -o "$out/$side"
     done
     # Mesa desktop GL (compatibility profile), no gl4es: the "correct" reference

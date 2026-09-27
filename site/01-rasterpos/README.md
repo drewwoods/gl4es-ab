@@ -24,16 +24,19 @@ arrow tip on the upper-right corner of its dot.
 | Marker | Where | Expected |
 |---|---|---|
 | white | the 8 corners of a spinning cube, drawn first | an arrow at every green dot |
-| yellow | an anchor set under `glOrtho` (w = 1) | an arrow at the dot, in A as well: master handles w = 1 |
-| red | a probe orbiting through, beside and behind the viewer, drawn right after the anchor | an arrow at the dot while the probe is in view; **no red arrow at all** otherwise |
+| yellow | a row of 2D points under `glOrtho` (w = 1), labelled "2D ORTHO: CORRECT IN A AND B" | an arrow at every dot, in A as well: without a perspective divide, w = 1 already works |
+| red | a probe orbiting through, beside and behind the viewer, drawn right after the yellow row | an arrow at the dot while the probe is in view; **no red arrow at all** otherwise |
+
+The labels are `glBitmap` text under `glOrtho` too, so they render the same in
+A and B.
 
 The status line under each side says where the probe is, from the demo's own
 arithmetic, so you know whether a red arrow should be visible.
 
 **A (master):** the white arrows are scattered away from the cube or missing.
-While the probe is outside the view (for example, freeze at t = 6), the
-anchor's arrow is red instead of yellow: the probe's arrow was drawn at the
-stale raster position the anchor left behind.
+While the probe is outside the view (for example, freeze at t = 6), the last
+yellow point's arrow is red instead of yellow: the probe's arrow was drawn at
+the stale raster position that point left behind.
 **B:** every arrow points at its dot, and there is no red arrow while the
 probe is out of view. B matches the native Mesa desktop-GL reference image.
 
@@ -58,10 +61,16 @@ so this demo never crosses the left edge.
 
 ## Running it
 
+A and B default to the SHAs in `refs`; pass `[ref-A] [ref-B]` to override.
+
 ```
-./build.sh 01-rasterpos master <patch-ref> web      # site/01-rasterpos/
-./build.sh 01-rasterpos master <patch-ref> native   # Linux + Mesa; out/native/01-rasterpos/
+./build.sh 01-rasterpos web      # site/01-rasterpos/
+./build.sh 01-rasterpos native   # Linux + Mesa; out/native/01-rasterpos/
+./run-x11.sh 01-rasterpos                          # ref, A, B in X11 windows, side by side
 ```
+
+A is `master` once the glBitmap left-clip fix has merged; until then it's the
+fix's branch, which patch #1 sits on.
 
 The native build renders one frame headless (EGL surfaceless + pbuffer) at
 `AB_FRAME_T` (default t = 1) and writes `ref.png` (Mesa desktop GL, no gl4es),

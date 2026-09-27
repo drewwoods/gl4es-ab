@@ -28,13 +28,19 @@
   iframe { display: block; width: 100%; aspect-ratio: 480 / 410; border: 0; }
   .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0; }
   .controls input[type=range] { flex: 1; min-width: 160px; }
-  .notes { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 8px; }
+  .notes, .commits { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 8px; }
+  h2 { font-size: 16px; margin: 4px 0 8px; }
+  .commits p, .commits ol { margin: 6px 0; }
+  .commits li { margin: 4px 0; overflow-wrap: anywhere; }
+  a { color: #0a66d8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) a { color: #6cb4ff; } }
+  :root[data-theme="dark"] a { color: #6cb4ff; }
 </style>
 </head>
 <body>
 <main>
   <h1>@TITLE@</h1>
-  <div class="refs">A = @REF_A@ (@SHA_A@) · B = @REF_B@ (@SHA_B@)</div>
+  <div class="refs">A = @REF_A@ · B = @REF_B@</div>
   <div class="ab">
     <figure><figcaption>A <code>@REF_A@</code></figcaption><iframe src="a/index.html" title="A"></iframe></figure>
     <figure><figcaption>B <code>@REF_B@</code></figcaption><iframe src="b/index.html" title="B"></iframe></figure>
@@ -44,6 +50,10 @@
     <input type="range" id="t" min="0" max="60" step="0.01" value="0">
     <output id="tv">0.00 s</output>
   </div>
+  <section class="commits">
+    <h2>What changes from A to B</h2>
+@COMMITS@
+  </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and
     gl4es keeps global state. Both follow the wall clock, so they show the same

@@ -28,22 +28,37 @@
   iframe { display: block; width: 100%; aspect-ratio: 480 / 410; border: 0; }
   .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0; }
   .controls input[type=range] { flex: 1; min-width: 160px; }
-  .notes { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 8px; }
+  .notes, .commits { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 8px; }
+  h2 { font-size: 16px; margin: 4px 0 8px; }
+  .commits p, .commits ol { margin: 6px 0; }
+  .commits li { margin: 4px 0; overflow-wrap: anywhere; }
+  a { color: #0a66d8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) a { color: #6cb4ff; } }
+  :root[data-theme="dark"] a { color: #6cb4ff; }
 </style>
 </head>
 <body>
 <main>
   <h1>glBitmap clipping at the window's left edge</h1>
-  <div class="refs">A = master (81547d9867) · B = fix-bitmap-left-clip (98dd9cdc44)</div>
+  <div class="refs">A = 81547d9867 · B = 98dd9cdc44</div>
   <div class="ab">
-    <figure><figcaption>A <code>master</code></figcaption><iframe src="a/index.html" title="A"></iframe></figure>
-    <figure><figcaption>B <code>fix-bitmap-left-clip</code></figcaption><iframe src="b/index.html" title="B"></iframe></figure>
+    <figure><figcaption>A <code>81547d9867</code></figcaption><iframe src="a/index.html" title="A"></iframe></figure>
+    <figure><figcaption>B <code>98dd9cdc44</code></figcaption><iframe src="b/index.html" title="B"></iframe></figure>
   </div>
   <div class="controls">
     <label><input type="checkbox" id="freeze"> Freeze both at</label>
     <input type="range" id="t" min="0" max="60" step="0.01" value="0">
     <output id="tv">0.00 s</output>
   </div>
+  <section class="commits">
+    <h2>What changes from A to B</h2>
+<p>A is <a href="https://github.com/drewwoods/gl4es/commit/81547d986798e876de8b434193920b606a72363f"><code>81547d9867</code></a> Merge pull request #513 from FWGS/master</p>
+<p>B adds these commits:</p>
+<ol>
+<li><a href="https://github.com/drewwoods/gl4es/commit/98dd9cdc44134de4d7f8af284985249d09ec4ff8"><code>98dd9cdc44</code></a> src/gl: Fix glBitmap clipping at the viewport's left edge</li>
+</ol>
+<p><a href="https://github.com/drewwoods/gl4es/compare/81547d986798...98dd9cdc4413">Full diff A...B on GitHub</a></p>
+  </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and
     gl4es keeps global state. Both follow the wall clock, so they show the same

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# crashtest.sh <demo> <ref-A> <ref-B>
+# crashtest.sh <demo> [ref-A] [ref-B]
 #
 # A/B memory-safety test (Linux + Mesa). Builds demos/<demo> against gl4es A
 # and B with AddressSanitizer, runs one frame of each, and checks that
@@ -7,13 +7,15 @@
 #   B runs clean (the fix removes it).
 # Exit status 0 = PASS. ASan decides the verdict because a plain build only
 # crashes when the corrupted heap happens to be noticed; the plain run is
-# printed for information.
+# printed for information. Refs not given come from demos/<demo>/refs.
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
-demo=${1:?usage: crashtest.sh <demo> <ref-A> <ref-B>}
-ref_a=${2:?ref-A}
-ref_b=${3:?ref-B}
+demo=${1:?usage: crashtest.sh <demo> [ref-A] [ref-B]}
+default_ref() { sed -n "s/^$1=//p" "$here/demos/$demo/refs" 2>/dev/null; }
+ref_a=${2:-$(default_ref REF_A)}
+ref_b=${3:-$(default_ref REF_B)}
+[ -n "$ref_a" ] && [ -n "$ref_b" ] || { echo "no refs given and none in demos/$demo/refs" >&2; exit 1; }
 out=$here/out/native/$demo
 logs=$out/crashtest
 export LIBGL_NOBANNER=1

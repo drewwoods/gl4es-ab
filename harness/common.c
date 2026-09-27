@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #include "ab.h"
@@ -44,8 +45,11 @@ const char *ab_status(void)
 {
     if (draw_ms_avg == 0 && draw_ms_n)
         draw_ms_avg = draw_ms_sum / draw_ms_n;
-    snprintf(status, sizeof status, "%s · %s@%s · draw %.3f ms%s%s",
-             AB_SIDE, AB_REF, AB_SHA, draw_ms_avg, report[0] ? " · " : "", report);
+    /* "a · master@81547d9867", or just "a · 81547d9867" when the ref is a SHA. */
+    int named = strcmp(AB_REF, AB_SHA) != 0;
+    snprintf(status, sizeof status, "%s · %s%s%s · draw %.3f ms%s%s",
+             AB_SIDE, named ? AB_REF : "", named ? "@" : "", AB_SHA,
+             draw_ms_avg, report[0] ? " · " : "", report);
     return status;
 }
 

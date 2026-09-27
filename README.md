@@ -15,7 +15,8 @@ harness/           shared host code
   shell.html         one side's page
   ab.html            the side-by-side A/B page
 demos/NN-<patch>/  main.c + README.md (the bug, what to look for, expected result)
-build.sh           build.sh <demo> <ref-A> <ref-B> [web|native|all]
+                   + refs: the default A and B, as full gl4es SHAs
+build.sh           build.sh <demo> [ref-A] [ref-B] [web|native|all]
 site/NN-<patch>/   the built A/B page (index.html, a/, b/)
 ```
 
@@ -29,17 +30,18 @@ Web (needs `emcc`; macOS is fine):
 
 ```
 source ~/src/emsdk/emsdk_env.sh
-./build.sh 01-rasterpos master <patch-ref> web
+./build.sh 01-rasterpos web                  # A and B from demos/01-rasterpos/refs
+./build.sh 01-rasterpos master <patch-ref> web   # or any two refs
 python3 -m http.server -d site 8765    # then open /01-rasterpos/
 ```
 
 Native (Linux + Mesa with EGL surfaceless; gl4es can't be built on macOS):
 
 ```
-JOBS=2 ./build.sh 01-rasterpos master <patch-ref> native
+JOBS=2 ./build.sh 01-rasterpos native
 ```
 
-For memory bugs, `./crashtest.sh <demo> <ref-A> <ref-B>` builds both sides
+For memory bugs, `./crashtest.sh <demo> [ref-A] [ref-B]` builds both sides
 with AddressSanitizer and passes when A reports a memory error and B runs
 clean.
 
@@ -55,6 +57,11 @@ calls `gl4es_pre_swap()` and `gl4es_post_swap()`, the swap hooks gl4es exports
 for NOX11/NOEGL builds. Without them, work gl4es still queues on the CPU
 (glBitmap batches, for example) is drawn a frame late, because `glClear` does
 not flush it.
+
+The A/B page lists what changes from A to B: A's commit, then every commit in
+`A..B`, each linked to GitHub (the gl4es checkout's `origin`, or
+`$GL4ES_WEB_URL`), plus a link to the full diff. The links work once those
+commits are pushed there.
 
 Each side of the web page follows the wall clock, wrapped to 60 s, so A and B
 show the same pose. "Freeze" sends a fixed t to both iframes. A and B are

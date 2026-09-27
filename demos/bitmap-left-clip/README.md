@@ -38,10 +38,12 @@ glBitmap's clipping is being tested, not `glRasterPos`.
 
 ## Running it
 
+A and B default to the SHAs in `refs`; pass `[ref-A] [ref-B]` to override.
+
 ```
-./build.sh bitmap-left-clip master <fix-ref> web
-./build.sh bitmap-left-clip master <fix-ref> native
-./crashtest.sh bitmap-left-clip master <fix-ref>          # Linux: ASan A/B verdict
+./build.sh bitmap-left-clip web
+./build.sh bitmap-left-clip native
+./crashtest.sh bitmap-left-clip          # Linux: ASan A/B verdict
 ```
 
 `crashtest.sh` builds both sides with AddressSanitizer and passes when A
