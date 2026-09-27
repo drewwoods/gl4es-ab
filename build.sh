@@ -162,9 +162,58 @@ build_native() {
     echo "native: $out/{ref,a,b}.png"
 }
 
+# Fail before doing any work, saying what's missing and what else to try.
+check_web() {
+    command -v emcc >/dev/null && command -v emcmake >/dev/null && command -v cmake >/dev/null && return
+    {
+        echo "build.sh: the web target needs Emscripten (emcc, emcmake) and cmake."
+        if ! command -v cmake >/dev/null; then
+            echo "  cmake is not installed."
+        fi
+        if ! command -v emcc >/dev/null; then
+            local env
+            for env in "${EMSDK:-}/emsdk_env.sh" "$HOME/emsdk/emsdk_env.sh" \
+                       "$HOME/src/emsdk/emsdk_env.sh"; do
+                [ -f "$env" ] && break
+                env=
+            done
+            if [ -n "$env" ]; then
+                echo "  emsdk is installed but not in this shell's environment. Run:"
+                echo "      source $env"
+            else
+                echo "  Install emsdk: https://emscripten.org/docs/getting_started/downloads.html"
+                echo "  then source its emsdk_env.sh."
+            fi
+        fi
+        echo "Or build natively (Linux + Mesa): ./build.sh $demo native"
+    } >&2
+    exit 1
+}
+check_native() {
+    local missing=
+    if [ "$(uname -s)" != Linux ]; then
+        echo "build.sh: the native target needs Linux + Mesa (EGL surfaceless); this is $(uname -s)." >&2
+        echo "Build for the web instead: ./build.sh $demo web" >&2
+        exit 1
+    fi
+    command -v cmake >/dev/null || missing="$missing cmake"
+    if ! command -v "${CC:-gcc}" >/dev/null; then
+        missing="$missing ${CC:-gcc}"
+    elif ! printf '#include <EGL/egl.h>\n#include <X11/Xlib.h>\n' \
+            | "${CC:-gcc}" -E -x c - >/dev/null 2>&1; then
+        missing="$missing EGL/X11-headers"
+    fi
+    if [ -n "$missing" ]; then
+        echo "build.sh: the native target is missing:$missing" >&2
+        echo "  (Debian/Ubuntu: apt install build-essential cmake libegl-dev libx11-dev libgl-dev)" >&2
+        echo "Or build for the web: ./build.sh $demo web" >&2
+        exit 1
+    fi
+}
+
 case $target in
-web)    build_web ;;
-native) build_native ;;
-all)    build_web; build_native ;;
+web)    check_web; build_web ;;
+native) check_native; build_native ;;
+all)    check_web; check_native; build_web; build_native ;;
 *)      echo "unknown target: $target" >&2; exit 1 ;;
 esac
