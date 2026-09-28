@@ -14,19 +14,28 @@
  * drivers answer glGet* without waiting, so expect little difference
  * there; the stall is a WebGL one.
  *
+ * glGetBooleanv had no gl4es version at all: every call went to the
+ * driver, a stall on WebGL, and state only gl4es knows (GL_LIGHTING on
+ * GLES2) came back unwritten. getbooleanv = 1 checks two flags with it
+ * before each label, as HUD code does; the status line reports whether
+ * glGetBooleanv(GL_LIGHTING) returns the value just set.
+ *
  * batches (1..200) sets the number of labels; pushattrib (0 or 1) turns
- * the explicit glPushAttrib off, leaving only the blit's. */
+ * the explicit glPushAttrib off, leaving only the blit's; getbooleanv (0
+ * or 1) turns the glGetBooleanv checks off. */
 #include <math.h>
 
 #include "ab.h"
 
 static GLfloat batches = 60;
 static GLfloat pushattrib = 1;
+static GLfloat getbooleanv = 1;
 
 void demo_init(void)
 {
     ab_param("batches", &batches, 1, 200, 1);
     ab_param("pushattrib", &pushattrib, 0, 1, 1);
+    ab_param("getbooleanv", &getbooleanv, 0, 1, 1);
 }
 
 void demo_draw(double t)
@@ -35,6 +44,15 @@ void demo_draw(double t)
     glClearColor(0.08f, 0.08f, 0.10f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
+
+    /* Does glGetBooleanv see state only gl4es tracks? 2 = left unwritten. */
+    GLboolean lit[2] = { 2, 2 };
+    glEnable(GL_LIGHTING);
+    glGetBooleanv(GL_LIGHTING, &lit[0]);
+    glDisable(GL_LIGHTING);
+    glGetBooleanv(GL_LIGHTING, &lit[1]);
+    const char *lighting = lit[0] == GL_TRUE && lit[1] == GL_FALSE ? "correct"
+                         : lit[0] == 2 ? "left unwritten" : "wrong";
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -71,6 +89,13 @@ void demo_draw(double t)
         glVertex2f(x + 10, y + 10);
         glVertex2f(x, y + 10);
         glEnd();
+        if (getbooleanv) {
+            /* Both are answered by gl4es_commonGet() in B. Enable flags
+             * such as GL_BLEND still go to the driver in every glGet*. */
+            GLboolean depth, lighting;
+            glGetBooleanv(GL_DEPTH_WRITEMASK, &depth);
+            glGetBooleanv(GL_LIGHTING, &lighting);
+        }
         if (pushattrib)
             glPushAttrib(GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT | GL_LINE_BIT
                          | GL_VIEWPORT_BIT | GL_SCISSOR_BIT | GL_HINT_BIT);
@@ -79,6 +104,8 @@ void demo_draw(double t)
         if (pushattrib)
             glPopAttrib();
     }
-    ab_report("%d glBitmap batches%s; the frame is the same in A and B, compare the frame times",
-              n, pushattrib ? ", each in glPushAttrib" : "");
+    ab_report("%d glBitmap batches%s%s; glGetBooleanv(GL_LIGHTING): %s; "
+              "the frame is the same in A and B, compare the frame times",
+              n, pushattrib ? ", each in glPushAttrib" : "",
+              getbooleanv ? " and after 2 glGetBooleanv" : "", lighting);
 }

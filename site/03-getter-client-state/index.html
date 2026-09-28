@@ -67,11 +67,11 @@
 <body class="perf">
 <main>
   <h1>03 · glGet* calls that wait for the GPU</h1>
-  <div class="refs">A = original, 6f1c61f4e8 · B = patched, 4af787ad08</div>
+  <div class="refs">A = original, 91717933a3 · B = patched, 64adfb7ae2</div>
   <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/03-getter-client-state">demos/03-getter-client-state</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/03-getter-client-state/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/03-getter-client-state/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/03-getter-client-state/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
-    <figure><figcaption>A · original <code>6f1c61f4e8</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
-    <figure><figcaption>B · patched <code>4af787ad08</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+    <figure><figcaption>A · original <code>91717933a3</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
+    <figure><figcaption>B · patched <code>64adfb7ae2</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <section class="timing">
     <div class="head">
@@ -99,12 +99,13 @@
   <div class="params" id="params" hidden></div>
   <section class="commits">
     <h2>What changes from A to B</h2>
-<p>A is <a href="https://github.com/drewwoods/gl4es/commit/6f1c61f4e8167f5d97d0a98edfc9f39c2142d9e2"><code>6f1c61f4e8</code></a> src/gl: Clear only the dirty part of glBitmap's buffer between batches</p>
+<p>A is <a href="https://github.com/drewwoods/gl4es/commit/91717933a3dade6d9b5b712b9c47872c53124ecb"><code>91717933a3</code></a> Merge pull request #518 from drewwoods/pr-02-bitmap-dirty-clear</p>
 <p>B adds these commits:</p>
 <ol>
 <li><a href="https://github.com/drewwoods/gl4es/commit/4af787ad0837de7e97a8cff333ebefa0c2072756"><code>4af787ad08</code></a> src/gl: Answer more glGet* queries from gl4es's own state</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/64adfb7ae271df58a0355cfcd864a434f19432dd"><code>64adfb7ae2</code></a> src/gl: Answer glGetBooleanv from gl4es's own state too</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/6f1c61f4e816...4af787ad0837">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/91717933a3da...64adfb7ae271">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and
