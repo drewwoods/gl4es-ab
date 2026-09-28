@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · State leaking out of glPushAttrib/glPopAttrib</title>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7; --panel: #fff;
+    --good: #1a7f37; --bad: #c62828; --accent: #0a66d8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161617; --fg: #f5f5f7; --muted: #a1a1a6; --line: #3a3a3c; --panel: #1f1f21;
+      --good: #4ac26b; --bad: #ff6b6b; --accent: #6cb4ff;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161617; --fg: #f5f5f7; --muted: #a1a1a6; --line: #3a3a3c; --panel: #1f1f21;
+    --good: #4ac26b; --bad: #ff6b6b; --accent: #6cb4ff;
+  }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg);
+         font: 15px/1.5 system-ui, -apple-system, sans-serif; }
+  main { max-width: 1000px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .refs { color: var(--muted); font: 13px ui-monospace, Menlo, monospace; }
+  .source { font-size: 14px; margin: 4px 0 16px; }
+  .ab { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  figcaption { padding: 8px 10px; font-weight: 600; border-bottom: 1px solid var(--line); }
+  figcaption code { font-weight: 400; color: var(--muted); }
+  iframe { display: block; width: 100%; aspect-ratio: 480 / 410; border: 0; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0; }
+  .controls input[type=range] { flex: 1; min-width: 160px; }
+  .params { display: grid; grid-template-columns: max-content 1fr 4em; gap: 6px 12px;
+            align-items: center; margin: 0 0 16px; }
+  .params[hidden] { display: none; }
+  .params label { font: 13px ui-monospace, Menlo, monospace; }
+  .params output { font: 13px ui-monospace, Menlo, monospace; text-align: right; }
+  .params .row { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; }
+  .params .hint { color: var(--muted); font-size: 13px; }
+  .timing { margin: 16px 0; }
+  .timing table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .timing th, .timing td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .timing th { font-weight: 600; font-size: 13px; color: var(--muted); }
+  .timing td.ms { font: 15px ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .timing td.delta { font-weight: 700; font-size: 17px; }
+  .perf .timing { margin-top: 0; padding: 12px 14px; border: 1px solid var(--line);
+                  border-radius: 8px; background: var(--panel); }
+  .timing .faster { color: var(--good); }
+  .timing .slower { color: var(--bad); }
+  .timing .same { color: var(--muted); font-weight: 400; }
+  .timing .bar { display: block; height: 4px; margin-top: 4px; border-radius: 2px; background: var(--muted); }
+  .timing .bar.b { background: var(--accent); }
+  .timing .head { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; }
+  .timing .head h2 { margin: 0; }
+  .timing .hint { color: var(--muted); font-size: 13px; }
+  .notes, .commits { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 8px; }
+  h2 { font-size: 16px; margin: 4px 0 8px; }
+  .commits p, .commits ol { margin: 6px 0; }
+  .commits li { margin: 4px 0; overflow-wrap: anywhere; }
+  a { color: #0a66d8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) a { color: #6cb4ff; } }
+  :root[data-theme="dark"] a { color: #6cb4ff; }
+</style>
+</head>
+<body class="">
+<main>
+  <h1>04 · State leaking out of glPushAttrib/glPopAttrib</h1>
+  <div class="refs">A = original, 91717933a3 · B = patched, ebb307e159</div>
+  <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/04-pushattrib">demos/04-pushattrib</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/04-pushattrib/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/04-pushattrib/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/04-pushattrib/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
+  <div class="ab">
+    <figure><figcaption>A · original <code>91717933a3</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
+    <figure><figcaption>B · patched <code>ebb307e159</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+  </div>
+  <section class="timing">
+    <div class="head">
+      <h2>Frame time</h2>
+      <button id="measure">Measure</button>
+      <span class="hint" id="timing-state">Measure runs each side alone in turn for a cleaner number.</span>
+    </div>
+    <table>
+      <thead><tr><th></th><th>A · original</th><th>B · patched</th><th>B vs A</th></tr></thead>
+      <tbody>
+        <tr id="row-live"><td>Live, both running</td><td class="ms">…</td><td class="ms">…</td><td class="delta"></td></tr>
+        <tr id="row-measured"><td>Measured, each alone</td><td class="ms">–</td><td class="ms">–</td><td class="delta"></td></tr>
+      </tbody>
+    </table>
+    <p class="hint">CPU time per frame, from the start of the demo's drawing to the end of
+    <code>gl4es_pre_swap()</code>: the median of 30-frame averages. GPU work done after that isn't
+    counted; a driver call that waits for the GPU (a WebGL <code>getParameter</code>) is.
+    Measure pauses one side while timing the other, 3 rounds of 2.5 s or more each.</p>
+  </section>
+  <div class="controls">
+    <label><input type="checkbox" id="freeze"> Freeze both at</label>
+    <input type="range" id="t" min="0" max="60" step="0.01" value="0">
+    <output id="tv">0.00 s</output>
+  </div>
+  <div class="params" id="params" hidden></div>
+  <section class="commits">
+    <h2>What changes from A to B</h2>
+<p>A is <a href="https://github.com/drewwoods/gl4es/commit/91717933a3dade6d9b5b712b9c47872c53124ecb"><code>91717933a3</code></a> Merge pull request #518 from drewwoods/pr-02-bitmap-dirty-clear</p>
+<p>B adds these commits:</p>
+<ol>
+<li><a href="https://github.com/drewwoods/gl4es/commit/b2badaeae2490472022da5802aeba2d3ce15cb79"><code>b2badaeae2</code></a> src/gl: Save and restore GL_POLYGON_BIT in glPushAttrib</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/98a8b1dbb4c22775b0377676a6be41ed04148959"><code>98a8b1dbb4</code></a> src/gl: Save and restore the line stipple in glPushAttrib</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/eceab204a63b46fac6fba85989727ae264958d62"><code>eceab204a6</code></a> src/gl: Save and restore point parameters in glPushAttrib</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/0c7026c0cd4ad3da3b835da8c8535b1d9b7d2030"><code>0c7026c0cd</code></a> src/gl: Save and restore clip-plane equations in glPushAttrib</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/ebb307e1594661072ea11d7d1f1ba509003647cd"><code>ebb307e159</code></a> src/gl: Save and restore the texture environment in glPushAttrib</li>
+</ol>
+<p><a href="https://github.com/drewwoods/gl4es/compare/91717933a3da...ebb307e15946">Full diff A...B on GitHub</a></p>
+  </section>
+  <div class="notes">
+    A and B are separate pages because each links its own gl4es build, and
+    gl4es keeps global state. Both follow the wall clock, so they show the same
+    pose; freeze to compare a fixed frame. What to look for: <a href="README.md">README.md</a>.
+  </div>
+</main>
+<script>
+  var freeze = document.getElementById('freeze'), t = document.getElementById('t'),
+      tv = document.getElementById('tv');
+  function send() {
+    var v = freeze.checked ? parseFloat(t.value) : -1;
+    tv.textContent = parseFloat(t.value).toFixed(2) + ' s';
+    document.querySelectorAll('iframe').forEach(function(f) {
+      f.contentWindow.postMessage({ t: v }, '*');
+    });
+  }
+  freeze.addEventListener('change', function() { send(); clearLive(); });
+
+  // Values the demo registered with ab_param(): each side announces them;
+  // the first announcement builds the sliders, and every side that announces
+  // gets the current values back, so A and B always agree. Non-default values
+  // live in the URL hash, so a position can be linked.
+  var params = null, values = {};
+  var frames = function() { return document.querySelectorAll('iframe'); };
+  function sendParam(i, target) {
+    if (!target && typeof clearLive === 'function') clearLive();
+    var msg = { param: i, value: values[params[i].name] };
+    if (target) target.postMessage(msg, '*');
+    else frames().forEach(function(f) { f.contentWindow.postMessage(msg, '*'); });
+  }
+  function saveHash() {
+    var h = new URLSearchParams();
+    params.forEach(function(p) { if (values[p.name] !== p.value) h.set(p.name, values[p.name]); });
+    var s = h.toString();
+    history.replaceState(null, '', s ? '#' + s : location.pathname + location.search);
+  }
+  function buildParams(list) {
+    params = list;
+    var hash = new URLSearchParams(location.hash.slice(1));
+    var box = document.getElementById('params');
+    var inputs = [];
+    list.forEach(function(p, i) {
+      var v = hash.has(p.name) ? parseFloat(hash.get(p.name)) : p.value;
+      values[p.name] = v;
+      var label = document.createElement('label');
+      label.textContent = p.name;
+      label.htmlFor = 'param-' + i;
+      var range = document.createElement('input');
+      range.type = 'range'; range.id = 'param-' + i;
+      range.min = p.min; range.max = p.max; range.step = p.step; range.value = v;
+      var out = document.createElement('output');
+      out.textContent = v;
+      range.addEventListener('input', function() {
+        values[p.name] = parseFloat(range.value);
+        out.textContent = range.value;
+        sendParam(i);
+        saveHash();
+      });
+      inputs.push({ range: range, out: out, p: p });
+      paramInputs = inputs;
+      box.append(label, range, out);
+    });
+    var row = document.createElement('div');
+    row.className = 'row';
+    var reset = document.createElement('button');
+    reset.textContent = 'Reset';
+    reset.addEventListener('click', function() {
+      inputs.forEach(function(x, i) {
+        values[x.p.name] = x.p.value; x.range.value = x.p.value; x.out.textContent = x.p.value;
+        sendParam(i);
+      });
+      saveHash();
+    });
+    var hint = document.createElement('span');
+    hint.className = 'hint';
+    hint.textContent = 'Both sides get the same values; the URL keeps them.';
+    row.append(reset, hint);
+    box.append(row);
+    box.hidden = false;
+  }
+  // Editing the hash (or following a link to another position) applies it.
+  var paramInputs = [];
+  window.addEventListener('hashchange', function() {
+    if (!params) return;
+    var hash = new URLSearchParams(location.hash.slice(1));
+    paramInputs.forEach(function(x, i) {
+      var v = hash.has(x.p.name) ? parseFloat(hash.get(x.p.name)) : x.p.value;
+      values[x.p.name] = v; x.range.value = v; x.out.textContent = v;
+      sendParam(i);
+    });
+  });
+  window.addEventListener('message', function(e) {
+    if (!e.data || !e.data.abParams) return;
+    if (!params) buildParams(e.data.abParams);
+    params.forEach(function(p, i) { sendParam(i, e.source); });
+  });
+  t.addEventListener('input', function() { freeze.checked = true; send(); clearLive(); });
+
+  // Frame times: each side posts {abTiming: ms} per 30-frame window.
+  var live = { a: [], b: [] }, run = null, LIVE_WINDOWS = 20;
+  function sideOf(win) {
+    var f = frames();
+    return win === f[0].contentWindow ? 'a' : win === f[1].contentWindow ? 'b' : null;
+  }
+  function median(xs) {
+    if (!xs.length) return NaN;
+    var s = xs.slice().sort(function(x, y) { return x - y; }), m = s.length >> 1;
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  }
+  function fmt(ms) { return isNaN(ms) ? '…' : ms.toFixed(3) + ' ms'; }
+  function show(row, a, b) {
+    var cells = document.getElementById(row).children, max = Math.max(a, b) || 1;
+    [a, b].forEach(function(ms, i) {
+      cells[i + 1].innerHTML = fmt(ms) + (isNaN(ms) ? '' :
+        '<span class="bar' + (i ? ' b' : '') + '" style="width:' + (100 * ms / max) + '%"></span>');
+    });
+    var d = cells[3];
+    if (isNaN(a) || isNaN(b)) { d.textContent = ''; return; }
+    var diff = b - a, pct = 100 * diff / a;
+    if (Math.abs(pct) < 5) {
+      d.className = 'delta same';
+      d.textContent = 'no clear difference (' + (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%)';
+    } else if (diff < 0) {
+      d.className = 'delta faster';
+      d.textContent = (-diff).toFixed(3) + ' ms faster (' + pct.toFixed(0) + '%), ' +
+        (a / b).toFixed(1) + '× the speed';
+    } else {
+      d.className = 'delta slower';
+      d.textContent = diff.toFixed(3) + ' ms slower (+' + pct.toFixed(0) + '%)';
+    }
+  }
+  function clearLive() { live = { a: [], b: [] }; show('row-live', NaN, NaN); }
+  window.addEventListener('message', function(e) {
+    if (!e.data || typeof e.data.abTiming !== 'number') return;
+    var side = sideOf(e.source);
+    if (!side) return;
+    if (run) {
+      if (run.side === side && run.collect) run[side].push(e.data.abTiming);
+      return;
+    }
+    live[side].push(e.data.abTiming);
+    if (live[side].length > LIVE_WINDOWS) live[side].shift();
+    show('row-live', median(live.a), median(live.b));
+  });
+  function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+  // A performance demo leads with the frame times, measured once on load.
+  if (document.body.classList.contains('perf')) {
+    var ab = document.querySelector('.ab');
+    ab.parentNode.insertBefore(document.querySelector('.timing'), ab);
+    window.addEventListener('load', function() { setTimeout(function() { button.click(); }, 1500); });
+  }
+  function setRun(side, on) {
+    frames()[side === 'a' ? 0 : 1].contentWindow.postMessage({ run: on }, '*');
+  }
+  var button = document.getElementById('measure'), state = document.getElementById('timing-state');
+  button.addEventListener('click', async function() {
+    button.disabled = true;
+    run = { a: [], b: [] };
+    var ROUNDS = 3;
+    for (var r = 1; r <= ROUNDS; r++) {
+      for (var side of ['a', 'b']) {
+        state.textContent = 'Timing ' + side.toUpperCase() + ' alone, round ' + r + ' of ' + ROUNDS + '…';
+        setRun(side === 'a' ? 'b' : 'a', false);
+        setRun(side, true);
+        run.side = side; run.collect = false;
+        await sleep(500);          // settle after the resume
+        run.collect = true;
+        // 2.5 s, and at least 3 windows per round even when frames are slow
+        var t0 = Date.now();
+        while (Date.now() - t0 < 2500 || (run[side].length < 3 * r && Date.now() - t0 < 30000))
+          await sleep(100);
+      }
+    }
+    var done = run;
+    run = null;
+    setRun('a', true); setRun('b', true);
+    clearLive();
+    show('row-measured', median(done.a), median(done.b));
+    state.textContent = 'Measured at ' + new Date().toLocaleTimeString() + ': ' +
+      done.a.length + ' windows of A, ' + done.b.length + ' of B.';
+    button.disabled = false;
+  });
+</script>
+</body>
+</html>

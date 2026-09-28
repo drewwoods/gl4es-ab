@@ -1,0 +1,6 @@
+# Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
+# A: 91717933 upstream master
+# B: ebb307e1 "src/gl: Save and restore the texture environment in glPushAttrib",
+#    the last of five glPushAttrib commits
+REF_A=91717933a3dade6d9b5b712b9c47872c53124ecb
+REF_B=ebb307e1594661072ea11d7d1f1ba509003647cd
