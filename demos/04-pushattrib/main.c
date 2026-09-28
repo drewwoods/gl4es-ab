@@ -1,41 +1,40 @@
 /* 04-pushattrib: state set inside glPushAttrib/glPopAttrib leaking out.
  *
- * One row per attribute group. Each row sets some non-default state
- * inside a glPushAttrib(<group>)/glPopAttrib pair and draws the same
- * thing twice: once inside the pair (INSIDE PUSH), once after the pop
- * (AFTER POP). After the pop the state should be back to the default, so
- * the right column should always show the default look. Where gl4es
- * doesn't save the group, the state leaks and the right column looks like
- * the left one.
+ * One row per attribute group, drawing the same thing three times:
+ *   BEFORE  with the state set before glPushAttrib(<group>)
+ *   INSIDE  after changing that state inside the push
+ *   AFTER   after glPopAttrib
+ * The pop should put the state back as it was before the push, so AFTER
+ * should always look like BEFORE. Where gl4es doesn't save the group, the
+ * state leaks and AFTER looks like INSIDE instead.
  *
- *   row            inside the push              after the pop, correct
- *   POLYGON        glFrontFace(GL_CW),          green filled triangle
- *                  glPolygonMode(GL_LINE):      (culling keeps the CCW one)
- *                  outlines (gl4es doesn't
- *                  cull polygon-mode lines)
- *   LINE STIPPLE   glEnable(GL_LINE_STIPPLE),   solid lines
- *                  glLineStipple(4, 0x0F0F):
- *                  dashed lines
- *   POINT PARAMS   GL_POINT_DISTANCE_           five points of the same size
- *                  ATTENUATION: points shrink
- *                  left to right
- *   CLIP PLANE     glClipPlane keeps the top    bottom half, cut by the plane
- *                  half                         set before the push
- *   TEXTURE ENV    GL_TEXTURE_ENV_MODE          red checkerboard (GL_MODULATE)
- *                  GL_REPLACE: grey, the
- *                  colour ignored
+ *   row      BEFORE / AFTER (correct)       INSIDE
+ *   POLYGON  green filled triangle          glFrontFace(GL_CW) and
+ *            (culling keeps the CCW one)    glPolygonMode(GL_LINE): outlines
+ *                                           (gl4es doesn't cull polygon-mode
+ *                                           lines)
+ *   STIPPLE  solid lines                    glEnable(GL_LINE_STIPPLE),
+ *                                           glLineStipple(4, 0x0F0F): dashed
+ *   POINTS   five points of the same size   GL_POINT_DISTANCE_ATTENUATION:
+ *                                           points shrink left to right
+ *   CLIP     bottom half                    glClipPlane keeping the top half
+ *   TEXENV   red checkerboard (GL_MODULATE) GL_REPLACE: grey, colour ignored
  *
  * Each row puts its state back to the default when it's done, so rows
  * don't affect each other, and every frame starts from the defaults. */
-/* glPointParameterfv is GL 1.4: Mesa's GL/gl.h declares it only with this. */
+/* glPointParameterfv is GL 1.4: Mesa's GL/gl.h declares it only with this
+ * (gl4es's GL/gl.h, force-included in the web build, defines it already). */
+#ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
+#endif
 #include "ab.h"
 
 #define ROWS 5
-#define BOX_W 110
+#define BOX_W 100
 #define BOX_H 48
-#define X_INSIDE 196
-#define X_AFTER 346
+#define X_BEFORE 110
+#define X_INSIDE 232
+#define X_AFTER 354
 
 static GLuint checker;
 
@@ -85,12 +84,12 @@ static void lines_shape(int x, int y)
     glEnd();
 }
 
-/* Five points 22 px apart. Attenuation uses the eye-space distance, which
+/* Five points 20 px apart. Attenuation uses the eye-space distance, which
  * under this glOrtho is in pixels, so the projection is shifted to put the
- * eye at the first point: the points are 0, 22, 44, 66 and 88 px from it. */
+ * eye at the first point: the points are 0, 20, 40, 60 and 80 px from it. */
 static void points_shape(int x, int y)
 {
-    float ox = x + 11, oy = y + BOX_H / 2;
+    float ox = x + 10, oy = y + BOX_H / 2;
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -99,7 +98,7 @@ static void points_shape(int x, int y)
     glColor3f(0.4f, 0.7f, 1.0f);
     glBegin(GL_POINTS);
     for (int i = 0; i < 5; i++)
-        glVertex2f(i * 22, 0);
+        glVertex2f(i * 20, 0);
     glEnd();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
@@ -142,10 +141,11 @@ void demo_draw(double t)
     glLoadIdentity();
 
     glColor3f(0.6f, 0.6f, 0.65f);
-    ab_label(X_INSIDE, AB_H - 26, "INSIDE PUSH");
-    ab_label(X_AFTER, AB_H - 26, "AFTER POP");
+    ab_label(X_BEFORE, AB_H - 26, "BEFORE");
+    ab_label(X_INSIDE, AB_H - 26, "INSIDE");
+    ab_label(X_AFTER, AB_H - 26, "AFTER");
     static const char *names[ROWS] = {
-        "POLYGON", "LINE STIPPLE", "POINT PARAMS", "CLIP PLANE", "TEXTURE ENV"
+        "POLYGON", "STIPPLE", "POINTS", "CLIP", "TEXENV"
     };
     for (int r = 0; r < ROWS; r++)
         ab_label(8, row_y(r) + 18, names[r]);
@@ -158,6 +158,7 @@ void demo_draw(double t)
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    polygon_shape(X_BEFORE, y);
     glPushAttrib(GL_POLYGON_BIT);
     glFrontFace(GL_CW);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -172,6 +173,7 @@ void demo_draw(double t)
     y = row_y(1);
     glDisable(GL_LINE_STIPPLE);
     glLineStipple(1, 0xFFFF);
+    lines_shape(X_BEFORE, y);
     glPushAttrib(GL_LINE_BIT);
     glEnable(GL_LINE_STIPPLE);
     glLineStipple(4, 0x0F0F);
@@ -187,6 +189,7 @@ void demo_draw(double t)
     y = row_y(2);
     glPointSize(14);
     glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, no_attenuation);
+    points_shape(X_BEFORE, y);
     glPushAttrib(GL_POINT_BIT);
     glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, attenuation);
     points_shape(X_INSIDE, y);
@@ -202,6 +205,7 @@ void demo_draw(double t)
     GLdouble keep_top[4] = { 0, 1, 0, -mid };
     glClipPlane(GL_CLIP_PLANE0, keep_bottom);
     glEnable(GL_CLIP_PLANE0);
+    rect_shape(X_BEFORE, y);
     glPushAttrib(GL_TRANSFORM_BIT);
     glClipPlane(GL_CLIP_PLANE0, keep_top);
     rect_shape(X_INSIDE, y);
@@ -214,6 +218,7 @@ void demo_draw(double t)
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, checker);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    textured_shape(X_BEFORE, y);
     glPushAttrib(GL_TEXTURE_BIT);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     textured_shape(X_INSIDE, y);
@@ -226,8 +231,9 @@ void demo_draw(double t)
     /* Box outlines, to show where each shape should sit. */
     glColor3f(0.3f, 0.3f, 0.35f);
     for (int r = 0; r < ROWS; r++)
-        for (int c = 0; c < 2; c++) {
-            float x0 = (c ? X_AFTER : X_INSIDE) - 3.5f, y0 = row_y(r) - 3.5f;
+        for (int c = 0; c < 3; c++) {
+            static const int xs[3] = { X_BEFORE, X_INSIDE, X_AFTER };
+            float x0 = xs[c] - 3.5f, y0 = row_y(r) - 3.5f;
             glBegin(GL_LINE_LOOP);
             glVertex2f(x0, y0);
             glVertex2f(x0 + BOX_W + 7, y0);
@@ -236,6 +242,6 @@ void demo_draw(double t)
             glEnd();
         }
 
-    ab_report("AFTER POP should show the defaults: a green filled triangle, solid lines, "
-              "equal points, the bottom half, a red checkerboard");
+    ab_report("AFTER should look like BEFORE in every row: a green filled triangle, "
+              "solid lines, equal points, the bottom half, a red checkerboard");
 }
