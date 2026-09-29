@@ -1,0 +1,6 @@
+# Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
+# A: a444cc94 upstream master
+# B: 34cd5a0b "src/gl: Answer and save GL_COLOR_MATERIAL_FACE and _PARAMETER",
+#    the second of two color-material commits
+REF_A=a444cc94b17c672c66c3e6ce07428dc603034db1
+REF_B=34cd5a0b0cc2f40e2e099700162b98ab2393bda2
