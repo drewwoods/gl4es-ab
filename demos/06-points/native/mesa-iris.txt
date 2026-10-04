@@ -1,0 +1,1 @@
+Mesa Intel(R) UHD Graphics (JSL), 4.6 (Compatibility Profile) Mesa 25.2.0-devel, at t = 1 s

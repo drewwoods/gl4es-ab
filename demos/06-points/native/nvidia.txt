@@ -1,0 +1,1 @@
+NVIDIA GeForce RTX 5050/PCIe/SSE2, 4.6.0 NVIDIA 610.43.02, at t = 1 s
