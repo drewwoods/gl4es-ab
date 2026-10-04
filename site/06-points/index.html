@@ -30,6 +30,13 @@
   figcaption { padding: 8px 10px; font-weight: 600; border-bottom: 1px solid var(--line); }
   figcaption code { font-weight: 400; color: var(--muted); }
   iframe { display: block; width: 100%; aspect-ratio: 480 / 410; border: 0; }
+  .tests { margin-top: 16px; }
+  .tests .hint { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+  .tests .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  .test { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+  .test h3 { margin: 0; font-size: 14px; }
+  .test p { margin: 4px 0 8px; font-size: 13px; color: var(--muted); }
+  .test pre { margin: 0; overflow-x: auto; font: 12px/1.45 ui-monospace, Menlo, monospace; }
   .native { margin-top: 16px; }
   .native .hint { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
   .native figcaption { font-weight: 400; font-size: 13px; }
@@ -81,6 +88,89 @@
     <figure><figcaption>A · original <code>ec16bedd88</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
     <figure><figcaption>B · patched <code>c0ba9f86b9</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
+  <section class="tests">
+    <h2>What each row draws</h2>
+    <p class="hint">The OpenGL each row of the demo runs, taken from main.c, and what it should look like.</p>
+    <div class="grid">
+      <div class="test"><h3>SMOOTH</h3><p>Round points with a one-pixel soft edge, 6 to 40 px wide. Master draws squares, and the 40 px one 32 px wide.</p><pre><code>glColor3f(0.4f, 0.8f, 1.0f);
+glEnable(GL_POINT_SMOOTH);
+glEnable(GL_BLEND);
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+glPointSize(6);
+glBegin(GL_POINTS); glVertex2f(150, 296); glEnd(); glFlush();
+glPointSize(12);
+glBegin(GL_POINTS); glVertex2f(232, 296); glEnd(); glFlush();
+glPointSize(24);
+glBegin(GL_POINTS); glVertex2f(314, 296); glEnd(); glFlush();
+glPointSize(40);
+glBegin(GL_POINTS); glVertex2f(396, 296); glEnd(); glFlush();
+glDisable(GL_BLEND);
+glDisable(GL_POINT_SMOOTH);
+glPointSize(1);</code></pre></div>
+      <div class="test"><h3>ALPHA TEST</h3><p>As SMOOTH, with an alpha test. GL applies the coverage to alpha before the test, so the soft edge, where coverage is under 0.5, is cut off: round points with a hard edge. Master draws squares.</p><pre><code>glColor3f(1.0f, 0.75f, 0.2f);
+glEnable(GL_POINT_SMOOTH);
+glEnable(GL_BLEND);
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+glEnable(GL_ALPHA_TEST);
+glAlphaFunc(GL_GREATER, 0.5f);
+glPointSize(6);
+glBegin(GL_POINTS); glVertex2f(150, 232); glEnd(); glFlush();
+glPointSize(12);
+glBegin(GL_POINTS); glVertex2f(232, 232); glEnd(); glFlush();
+glPointSize(24);
+glBegin(GL_POINTS); glVertex2f(314, 232); glEnd(); glFlush();
+glPointSize(40);
+glBegin(GL_POINTS); glVertex2f(396, 232); glEnd(); glFlush();
+glDisable(GL_ALPHA_TEST);
+glAlphaFunc(GL_ALWAYS, 0);
+glDisable(GL_BLEND);
+glDisable(GL_POINT_SMOOTH);
+glPointSize(1);</code></pre></div>
+      <div class="test"><h3>SIZE RESET</h3><p>Four 24 px squares. The glPointSize(1) after them must not change them; master shrinks them to one-pixel dots.</p><pre><code>glColor3f(0.4f, 0.9f, 0.5f);
+glPointSize(24);
+glBegin(GL_POINTS);
+glVertex2f(150, 168);
+glVertex2f(232, 168);
+glVertex2f(314, 168);
+glVertex2f(396, 168);
+glEnd();
+glPointSize(1);
+glFlush();</code></pre></div>
+      <div class="test"><h3>TWO SIZES</h3><p>Two 8 px squares, then two 24 px ones. Master draws all four at 24 px.</p><pre><code>glColor3f(0.9f, 0.5f, 0.9f);
+glPointSize(8);
+glBegin(GL_POINTS);
+glVertex2f(150, 104);
+glVertex2f(232, 104);
+glEnd();
+glPointSize(24);
+glBegin(GL_POINTS);
+glVertex2f(314, 104);
+glVertex2f(396, 104);
+glEnd();
+glFlush();
+glPointSize(1);</code></pre></div>
+      <div class="test"><h3>LIST</h3><p>The SIZE RESET calls compiled into a display list: four 24 px squares. Master draws one-pixel dots.</p><pre><code>if (!list) {
+    list = glGenLists(1);
+    glNewList(list, GL_COMPILE);
+    glPointSize(24);
+    glBegin(GL_POINTS);
+    glVertex2f(150, 40);
+    glVertex2f(232, 40);
+    glVertex2f(314, 40);
+    glVertex2f(396, 40);
+    glEnd();
+    glPointSize(1);
+    glEndList();
+}
+glColor3f(1.0f, 0.45f, 0.4f);
+glCallList(list);
+glFlush();
+glPointSize(1);</code></pre></div>
+      <div class="test"><h3>GL_POINT_SIZE_MAX</h3><p>Should start at the largest point size the implementation draws; the status line shows both. Master starts it at 32.</p><pre><code>GLfloat size_max = 0, range[2] = { 0, 0 };
+glGetFloatv(GL_POINT_SIZE_MAX, &amp;size_max);
+glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, range);</code></pre></div>
+    </div>
+  </section>
   <section class="native">
     <h2>Native desktop GL</h2>
     <p class="hint">The same demo built against desktop OpenGL instead of gl4es, rendered once on each system named. A and B should match them. Hover one to mark in magenta where B differs from it.</p>

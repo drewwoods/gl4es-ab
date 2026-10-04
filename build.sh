@@ -147,6 +147,33 @@ source_html() {
     fi
 }
 
+# The demo's tests, from main.c: each starts with a comment
+#   /* test: NAME
+#    * what it should look like */
+# and runs to /* end test */. The page shows each one's name, description and
+# code, so a reader sees the exact calls each row makes. Prints the path of
+# their HTML (empty without any).
+tests_html() {
+    local html=$here/out/tests-$demo.html
+    awk '
+    function esc(s) { gsub(/&/, "\\&amp;", s); gsub(/</, "\\&lt;", s); gsub(/>/, "\\&gt;", s); return s }
+    function desc_line(s) { sub(/^[ \t]*(\/\*[ \t]*test:[^*]*|\*\/|\*)?[ \t]*/, "", s); sub(/[ \t]*\*\/[ \t]*$/, "", s); return s }
+    state == 0 && /\/\*[ \t]*test:/ {
+        name = $0; sub(/.*test:[ \t]*/, "", name); sub(/[ \t]*\*\/.*/, "", name)
+        desc = ""; code = ""; state = /\*\// ? 2 : 1; next
+    }
+    state == 1 { d = desc_line($0); if (d != "") desc = desc (desc == "" ? "" : " ") d; if (/\*\//) state = 2; next }
+    state == 2 && /\/\*[ \t]*end test[ \t]*\*\// {
+        n++
+        printf "      <div class=\"test\"><h3>%s</h3><p>%s</p><pre><code>%s</code></pre></div>\n", esc(name), esc(desc), code
+        state = 0; next
+    }
+    state == 2 { line = $0; sub(/^    /, "", line); code = code (code == "" ? "" : "\n") esc(line) }
+    ' "$demo_dir/main.c" >"$html"
+    [ -s "$html" ] && { printf '  <section class="tests">\n    <h2>What each row draws</h2>\n    <p class="hint">The OpenGL each row of the demo runs, taken from main.c, and what it should look like.</p>\n    <div class="grid">\n'; cat "$html"; printf '    </div>\n  </section>\n'; } >"$html.tmp" && mv "$html.tmp" "$html"
+    echo "$html"
+}
+
 # The demo's native desktop GL references, demos/<demo>/native/<name>.png
 # with a one-line <name>.txt caption, copied next to the page; prints the
 # path of the page's HTML for them (empty without any).
@@ -231,6 +258,7 @@ build_web() {
         -e "s|@SOURCE@|$(source_html)|g" \
         "$here/harness/ab.html" \
         | awk -v f="$commits" '/@COMMITS@/ { while ((getline l < f) > 0) print l; next } { print }' \
+        | awk -v f="$(tests_html)" '/@TESTS@/ { while ((getline l < f) > 0) print l; next } { print }' \
         | awk -v f="$(native_html "$out")" '/@NATIVE@/ { while ((getline l < f) > 0) print l; next } { print }' \
         >"$out/index.html"
     [ -f "$demo_dir/README.md" ] && cp "$demo_dir/README.md" "$out/README.md"

@@ -1,8 +1,9 @@
 /* 06-points: point smoothing and point size.
  *
- * Five rows of four points, each row a few lines of plain OpenGL; README.md
- * lists them with what each should look like. The points sit at
- * x = 150, 232, 314 and 396, one row every 64 px from y = 296 down.
+ * Five rows of four points, each row a few lines of plain OpenGL between a
+ * "test:" comment and "end test"; build.sh shows those blocks on the page.
+ * The points sit at x = 150, 232, 314 and 396, one row every 64 px from
+ * y = 296 down.
  *
  * gl4es draws immediate-mode geometry later, in a batch. Every row ends with
  * glFlush, so rows don't share a batch, and the SMOOTH and ALPHA TEST rows
@@ -14,18 +15,6 @@ static GLuint list;
 
 void demo_init(void)
 {
-    /* LIST: the SIZE RESET calls, compiled. */
-    list = glGenLists(1);
-    glNewList(list, GL_COMPILE);
-    glPointSize(24);
-    glBegin(GL_POINTS);
-    glVertex2f(150, 40);
-    glVertex2f(232, 40);
-    glVertex2f(314, 40);
-    glVertex2f(396, 40);
-    glEnd();
-    glPointSize(1);
-    glEndList();
 }
 
 void demo_draw(double t)
@@ -48,8 +37,9 @@ void demo_draw(double t)
     ab_label(8, 98, "TWO SIZES");
     ab_label(8, 34, "LIST");
 
-    /* SMOOTH: round points with a one-pixel soft edge. 40 is above 32, the
-     * GL_POINT_SIZE_MAX master starts with. */
+    /* test: SMOOTH
+     * Round points with a one-pixel soft edge, 6 to 40 px wide. Master draws
+     * squares, and the 40 px one 32 px wide. */
     glColor3f(0.4f, 0.8f, 1.0f);
     glEnable(GL_POINT_SMOOTH);
     glEnable(GL_BLEND);
@@ -65,10 +55,12 @@ void demo_draw(double t)
     glDisable(GL_BLEND);
     glDisable(GL_POINT_SMOOTH);
     glPointSize(1);
+    /* end test */
 
-    /* ALPHA TEST: as SMOOTH, with an alpha test. GL applies the coverage
-     * to alpha before the test, so the soft edge (coverage under 0.5) is
-     * cut off. */
+    /* test: ALPHA TEST
+     * As SMOOTH, with an alpha test. GL applies the coverage to alpha before
+     * the test, so the soft edge, where coverage is under 0.5, is cut off:
+     * round points with a hard edge. Master draws squares. */
     glColor3f(1.0f, 0.75f, 0.2f);
     glEnable(GL_POINT_SMOOTH);
     glEnable(GL_BLEND);
@@ -88,9 +80,11 @@ void demo_draw(double t)
     glDisable(GL_BLEND);
     glDisable(GL_POINT_SMOOTH);
     glPointSize(1);
+    /* end test */
 
-    /* SIZE RESET: four 24 px squares; the glPointSize(1) after them must
-     * not shrink them. */
+    /* test: SIZE RESET
+     * Four 24 px squares. The glPointSize(1) after them must not change
+     * them; master shrinks them to one-pixel dots. */
     glColor3f(0.4f, 0.9f, 0.5f);
     glPointSize(24);
     glBegin(GL_POINTS);
@@ -101,8 +95,11 @@ void demo_draw(double t)
     glEnd();
     glPointSize(1);
     glFlush();
+    /* end test */
 
-    /* TWO SIZES: two 8 px squares, then two 24 px ones. */
+    /* test: TWO SIZES
+     * Two 8 px squares, then two 24 px ones. Master draws all four at
+     * 24 px. */
     glColor3f(0.9f, 0.5f, 0.9f);
     glPointSize(8);
     glBegin(GL_POINTS);
@@ -116,17 +113,37 @@ void demo_draw(double t)
     glEnd();
     glFlush();
     glPointSize(1);
+    /* end test */
 
-    /* LIST: four 24 px squares, from the list compiled in demo_init. */
+    /* test: LIST
+     * The SIZE RESET calls compiled into a display list: four 24 px squares.
+     * Master draws one-pixel dots. */
+    if (!list) {
+        list = glGenLists(1);
+        glNewList(list, GL_COMPILE);
+        glPointSize(24);
+        glBegin(GL_POINTS);
+        glVertex2f(150, 40);
+        glVertex2f(232, 40);
+        glVertex2f(314, 40);
+        glVertex2f(396, 40);
+        glEnd();
+        glPointSize(1);
+        glEndList();
+    }
     glColor3f(1.0f, 0.45f, 0.4f);
     glCallList(list);
     glFlush();
     glPointSize(1);
+    /* end test */
 
-    /* GL_POINT_SIZE_MAX should start at the largest point size. */
+    /* test: GL_POINT_SIZE_MAX
+     * Should start at the largest point size the implementation draws; the
+     * status line shows both. Master starts it at 32. */
     GLfloat size_max = 0, range[2] = { 0, 0 };
     glGetFloatv(GL_POINT_SIZE_MAX, &size_max);
     glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, range);
+    /* end test */
 
     glColor3f(1, 1, 1);
     ab_report("SMOOTH: round, soft-edged points; ALPHA TEST: round, hard-edged; "
