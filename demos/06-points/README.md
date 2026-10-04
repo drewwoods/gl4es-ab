@@ -16,24 +16,82 @@ The first two are gl-repl's patches; the last three are new.
 
 ## What the page shows
 
-One row per case, each drawing four points left to right:
+Five rows of four points. Each row is the OpenGL below (the points sit at
+x = 150, 232, 314 and 396), and should look as described.
 
-| Row | What it does | Correct |
-|---|---|---|
-| SMOOTH | `GL_POINT_SMOOTH` and blending, sizes 6, 12, 24 and 40 | round points, a one-pixel soft edge, the full size |
-| ALPHA TEST | as SMOOTH, with `glAlphaFunc(GL_GREATER, 0.5)` | round points with a hard edge: the coverage under 0.5 fails the test |
-| SIZE RESET | `glPointSize(24)`, four points, `glPointSize(1)` | four 24 px squares |
-| TWO SIZES | `glPointSize(8)`, two points, `glPointSize(24)`, two points | two small squares, two large |
-| LIST | the SIZE RESET calls compiled into a display list, then `glCallList` | four 24 px squares |
+**SMOOTH**: four round points with a one-pixel soft edge, 6 to 40 px wide.
+On A they're squares, and the 40 px one is 32 px wide.
 
-On A (master), the smooth points are squares and the 40 px ones are 32 px.
-SIZE RESET and LIST are one-pixel dots, and TWO SIZES draws all four at 24 px.
-The status line reports `GL_POINT_SIZE_MAX`, which should equal the largest
-point size: 32 on A, the driver's maximum (511 in Chrome on a Mac) on B.
+```c
+glEnable(GL_POINT_SMOOTH);
+glEnable(GL_BLEND);
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+glPointSize(6);  glBegin(GL_POINTS); glVertex2f(150, 296); glEnd(); glFlush();
+glPointSize(12); glBegin(GL_POINTS); glVertex2f(232, 296); glEnd(); glFlush();
+glPointSize(24); glBegin(GL_POINTS); glVertex2f(314, 296); glEnd(); glFlush();
+glPointSize(40); glBegin(GL_POINTS); glVertex2f(396, 296); glEnd(); glFlush();
+```
 
-Every row ends with `glFlush`, so rows don't share a batch. The SMOOTH and
-ALPHA TEST rows also flush before each size change, so they don't depend
-on the `glPointSize` fix.
+**ALPHA TEST**: the same, with an alpha test. GL applies a smooth point's
+coverage to alpha before the alpha test, so the soft edge, where coverage
+is under 0.5, is cut off: round points with a hard edge. On A, squares.
+
+```c
+glEnable(GL_POINT_SMOOTH);
+glEnable(GL_BLEND);
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+glEnable(GL_ALPHA_TEST);
+glAlphaFunc(GL_GREATER, 0.5f);
+glPointSize(6);  glBegin(GL_POINTS); glVertex2f(150, 232); glEnd(); glFlush();
+/* ... 12, 24 and 40, as in SMOOTH */
+```
+
+**SIZE RESET**: four 24 px squares. The `glPointSize(1)` after them must
+not change them; on A it shrinks them to one-pixel dots.
+
+```c
+glPointSize(24);
+glBegin(GL_POINTS);
+glVertex2f(150, 168); glVertex2f(232, 168); glVertex2f(314, 168); glVertex2f(396, 168);
+glEnd();
+glPointSize(1);
+glFlush();
+```
+
+**TWO SIZES**: two 8 px squares, then two 24 px ones. On A, all four are
+24 px.
+
+```c
+glPointSize(8);
+glBegin(GL_POINTS); glVertex2f(150, 104); glVertex2f(232, 104); glEnd();
+glPointSize(24);
+glBegin(GL_POINTS); glVertex2f(314, 104); glVertex2f(396, 104); glEnd();
+glFlush();
+```
+
+**LIST**: the SIZE RESET calls, compiled into a display list: four 24 px
+squares. On A, one-pixel dots.
+
+```c
+glNewList(list, GL_COMPILE);   /* once, in demo_init */
+glPointSize(24);
+glBegin(GL_POINTS);
+glVertex2f(150, 40); glVertex2f(232, 40); glVertex2f(314, 40); glVertex2f(396, 40);
+glEnd();
+glPointSize(1);
+glEndList();
+
+glCallList(list);              /* every frame */
+glFlush();
+```
+
+The status line reports `glGetFloatv(GL_POINT_SIZE_MAX)`, which should
+start at the largest point size, `GL_ALIASED_POINT_SIZE_RANGE`'s maximum:
+32 on A, 511 on B in Chrome on a Mac.
+
+gl4es draws immediate-mode geometry later, in a batch. Each row ends with
+`glFlush`, so rows don't share a batch, and SMOOTH and ALPHA TEST flush
+after each point, so they test smoothing alone, not the `glPointSize` fix.
 
 ## Against native desktop GL
 

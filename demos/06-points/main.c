@@ -1,73 +1,31 @@
-/* 06-points: GL_POINT_SMOOTH ignored, and glPointSize applied too late.
+/* 06-points: point smoothing and point size.
  *
- * One row per case, each drawing four points left to right.
+ * Five rows of four points, each row a few lines of plain OpenGL; README.md
+ * lists them with what each should look like. The points sit at
+ * x = 150, 232, 314 and 396, one row every 64 px from y = 296 down.
  *
- *   row         what it does                              correct
- *   SMOOTH      GL_POINT_SMOOTH and blending, sizes 6,    round points with a
- *               12, 24 and 40                             soft edge
- *   ALPHA TEST  as SMOOTH, with glAlphaFunc(GL_GREATER,   round points, the
- *               0.5)                                      soft edge cut off
- *   SIZE RESET  glPointSize(24), four points,             four 24 px squares
- *               glPointSize(1)
- *   TWO SIZES   glPointSize(8), two points,               two small squares,
- *               glPointSize(24), two points                two large ones
- *   LIST        the SIZE RESET calls compiled into a      four 24 px squares
- *               display list, then glCallList
- *
- * The status line reports GL_POINT_SIZE_MAX, which should start at the
- * largest point size the implementation draws (GL_ALIASED_POINT_SIZE_RANGE).
- *
- * gl4es draws immediate-mode geometry later, in a batch, and master reads
- * the point size when the batch is drawn: the last size set before then
- * wins for every point in it. Every row ends with glFlush, so rows don't
- * share a batch, and the SMOOTH and ALPHA TEST rows also flush before each
- * size change, so they don't depend on that fix.
- *
- * Each row puts its state back to the default when it's done. */
+ * gl4es draws immediate-mode geometry later, in a batch. Every row ends with
+ * glFlush, so rows don't share a batch, and the SMOOTH and ALPHA TEST rows
+ * flush after each point, so they test smoothing alone, not the glPointSize
+ * fix. Each row puts its state back to the default when it's done. */
 #include "ab.h"
-
-#define ROWS 5
-#define X0 150
-#define DX 82
 
 static GLuint list;
 
-static int row_y(int row) { return AB_H - 70 - row * 64; }
-
-static void points(int row, int first, int n, int x_step)
-{
-    glBegin(GL_POINTS);
-    for (int i = first; i < first + n; i++)
-        glVertex2f(X0 + i * x_step, row_y(row) + 6);
-    glEnd();
-}
-
 void demo_init(void)
 {
+    /* LIST: the SIZE RESET calls, compiled. */
     list = glGenLists(1);
     glNewList(list, GL_COMPILE);
     glPointSize(24);
-    points(4, 0, 4, DX);
+    glBegin(GL_POINTS);
+    glVertex2f(150, 40);
+    glVertex2f(232, 40);
+    glVertex2f(314, 40);
+    glVertex2f(396, 40);
+    glEnd();
     glPointSize(1);
     glEndList();
-}
-
-static void smooth_row(int row)
-{
-    /* 40 is above 32, the GL_POINT_SIZE_MAX master starts with. */
-    static const GLfloat sizes[4] = { 6, 12, 24, 40 };
-    glEnable(GL_POINT_SMOOTH);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    for (int i = 0; i < 4; i++) {
-        glFlush();
-        glPointSize(sizes[i]);
-        points(row, i, 1, DX);
-    }
-    glFlush();
-    glPointSize(1);
-    glDisable(GL_BLEND);
-    glDisable(GL_POINT_SMOOTH);
 }
 
 void demo_draw(double t)
@@ -84,47 +42,88 @@ void demo_draw(double t)
     glLoadIdentity();
 
     glColor3f(0.6f, 0.6f, 0.65f);
-    static const char *names[ROWS] = {
-        "SMOOTH", "ALPHA TEST", "SIZE RESET", "TWO SIZES", "LIST"
-    };
-    for (int r = 0; r < ROWS; r++)
-        ab_label(8, row_y(r), names[r]);
+    ab_label(8, 290, "SMOOTH");
+    ab_label(8, 226, "ALPHA TEST");
+    ab_label(8, 162, "SIZE RESET");
+    ab_label(8, 98, "TWO SIZES");
+    ab_label(8, 34, "LIST");
 
-    /* SMOOTH */
+    /* SMOOTH: round points with a one-pixel soft edge. 40 is above 32, the
+     * GL_POINT_SIZE_MAX master starts with. */
     glColor3f(0.4f, 0.8f, 1.0f);
-    smooth_row(0);
+    glEnable(GL_POINT_SMOOTH);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glPointSize(6);
+    glBegin(GL_POINTS); glVertex2f(150, 296); glEnd(); glFlush();
+    glPointSize(12);
+    glBegin(GL_POINTS); glVertex2f(232, 296); glEnd(); glFlush();
+    glPointSize(24);
+    glBegin(GL_POINTS); glVertex2f(314, 296); glEnd(); glFlush();
+    glPointSize(40);
+    glBegin(GL_POINTS); glVertex2f(396, 296); glEnd(); glFlush();
+    glDisable(GL_BLEND);
+    glDisable(GL_POINT_SMOOTH);
+    glPointSize(1);
 
-    /* ALPHA TEST: GL applies the point's coverage to alpha before the alpha
-     * test, so the soft edge (coverage under 0.5) is discarded. */
+    /* ALPHA TEST: as SMOOTH, with an alpha test. GL applies the coverage
+     * to alpha before the test, so the soft edge (coverage under 0.5) is
+     * cut off. */
     glColor3f(1.0f, 0.75f, 0.2f);
+    glEnable(GL_POINT_SMOOTH);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.5f);
-    smooth_row(1);
+    glPointSize(6);
+    glBegin(GL_POINTS); glVertex2f(150, 232); glEnd(); glFlush();
+    glPointSize(12);
+    glBegin(GL_POINTS); glVertex2f(232, 232); glEnd(); glFlush();
+    glPointSize(24);
+    glBegin(GL_POINTS); glVertex2f(314, 232); glEnd(); glFlush();
+    glPointSize(40);
+    glBegin(GL_POINTS); glVertex2f(396, 232); glEnd(); glFlush();
     glDisable(GL_ALPHA_TEST);
     glAlphaFunc(GL_ALWAYS, 0);
+    glDisable(GL_BLEND);
+    glDisable(GL_POINT_SMOOTH);
+    glPointSize(1);
 
-    /* SIZE RESET: the trailing glPointSize(1) must not shrink these. */
+    /* SIZE RESET: four 24 px squares; the glPointSize(1) after them must
+     * not shrink them. */
     glColor3f(0.4f, 0.9f, 0.5f);
     glPointSize(24);
-    points(2, 0, 4, DX);
+    glBegin(GL_POINTS);
+    glVertex2f(150, 168);
+    glVertex2f(232, 168);
+    glVertex2f(314, 168);
+    glVertex2f(396, 168);
+    glEnd();
     glPointSize(1);
     glFlush();
 
-    /* TWO SIZES: two batches of points, each with its own size. */
+    /* TWO SIZES: two 8 px squares, then two 24 px ones. */
     glColor3f(0.9f, 0.5f, 0.9f);
     glPointSize(8);
-    points(3, 0, 2, DX);
+    glBegin(GL_POINTS);
+    glVertex2f(150, 104);
+    glVertex2f(232, 104);
+    glEnd();
     glPointSize(24);
-    points(3, 2, 2, DX);
+    glBegin(GL_POINTS);
+    glVertex2f(314, 104);
+    glVertex2f(396, 104);
+    glEnd();
     glFlush();
     glPointSize(1);
 
-    /* LIST: the SIZE RESET calls, compiled. */
+    /* LIST: four 24 px squares, from the list compiled in demo_init. */
     glColor3f(1.0f, 0.45f, 0.4f);
     glCallList(list);
     glFlush();
     glPointSize(1);
 
+    /* GL_POINT_SIZE_MAX should start at the largest point size. */
     GLfloat size_max = 0, range[2] = { 0, 0 };
     glGetFloatv(GL_POINT_SIZE_MAX, &size_max);
     glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, range);
