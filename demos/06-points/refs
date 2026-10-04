@@ -1,6 +1,6 @@
 # Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
 # A: ec16bedd upstream master
-# B: 010a4a1d "Default GL_POINT_SIZE_MAX to the largest point size", the
+# B: c0ba9f86 "Default GL_POINT_SIZE_MAX to the largest point size", the
 #    last of five point commits
 REF_A=ec16bedd8819c475326f4f1a3063772c6d986e06
-REF_B=010a4a1d3859fee45e14e7889f6cf8bf5e3b4f2a
+REF_B=c0ba9f86b981c89ac2623314da32bb203c3efc71

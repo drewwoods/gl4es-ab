@@ -100,12 +100,33 @@ desktop OpenGL instead of gl4es, on four implementations: NVIDIA's driver,
 Mesa's radeonsi (AMD) and iris (Intel), and Apple's OpenGL on an M2. B
 should look like all of them.
 
-Natively, gl4es with these commits (drawing through each machine's GLES2
-driver) differs from the same machine's desktop GL by 0 pixels on the AMD
-card, 192 on the NVIDIA card and 372 on the Intel GPU, all on the
-antialiased point edges; master differs by 6,680 to 11,667. The desktop
-implementations differ from each other by about as much (Apple and the
-Mesa ones by 400 to 550 pixels).
+Hover a reference to mark in magenta where B's frame differs from it, or
+hold Shift for A's. In Chrome on a Mac:
+
+| Native reference | B differs by | A differs by |
+|---|---|---|
+| Apple M2 | 308 px | 6,704 px |
+| Mesa iris (Intel UHD) | 424 px | 6,680 px |
+| Mesa radeonsi (RX 5700 XT) | 552 px | 6,760 px |
+| NVIDIA RTX 5050, driver 610.43 | 564 px | 6,774 px |
+
+B's differences are all on the antialiased edges of the smooth points,
+where the desktop implementations also disagree with each other. The
+coverage at the edge decides it: GL defines it as the part of each pixel
+inside the circle, so a point should cover its area, πr². Measured as a
+point's total brightness over πr², with sizes 1 to 12 px:
+
+| | 2 px | 3 px | 5 px | 8 px | 12 px |
+|---|---|---|---|---|---|
+| Apple M2 | 1.06 | 1.04 | 1.01 | 1.00 | 1.00 |
+| NVIDIA | 1.25 | 1.14 | 0.91 | 0.87 | 0.89 |
+| Mesa iris | 0.32 | 0.81 | 0.87 | 0.86 | 0.90 |
+| Mesa radeonsi | 0.32 | 0.47 | 0.67 | 0.77 | 0.85 |
+| B | 0.66 | 1.04 | 1.01 | 0.95 | 0.97 |
+
+B follows the area, like Apple; NVIDIA and Mesa draw points from about
+5 px up slightly smaller, and radeonsi's small points are much fainter,
+because Mesa's formula puts the edge half a pixel inside the circle.
 
 Before the highp commit, gl4es's points were badly wrong on the NVIDIA and
 AMD machines even on master: sizes past 256 units from the eye came out at
