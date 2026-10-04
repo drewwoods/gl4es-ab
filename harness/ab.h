@@ -2,7 +2,11 @@
 #ifndef AB_HARNESS_H
 #define AB_HARNESS_H
 
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 
 /* build.sh passes these; defaults keep editors quiet. */
 #ifndef AB_SIDE

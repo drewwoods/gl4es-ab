@@ -4,7 +4,8 @@
 # Builds gl4es at two refs of $GL4ES_REPO and links demos/<demo>/main.c
 # against each. Refs not given come from demos/<demo>/refs (REF_A=, REF_B=).
 #   web     (default)  site/<demo>/{index.html,a/,b/}       needs emcc
-#   native             out/native/<demo>/{a,b,ref} + PNGs    needs Linux + Mesa
+#   native             out/native/<demo>/{a,b,ref} + PNGs    needs Linux + Mesa;
+#                      on macOS, only ref.png, from Apple's OpenGL
 # gl4es builds are cached per commit under out/gl4es/<sha>/<target>, and built
 # with -ffile-prefix-map so no local paths end up in the published pages.
 # SANITIZE=address (native only) builds gl4es and the demo with ASan.
@@ -30,6 +31,7 @@ $(list_demos "$GL4ES_REPO" "$here")
 targets:
   web      (default) site/<demo>/ A/B page; needs emcc (source emsdk_env.sh)
   native   out/native/<demo>/{ref,a,b}.png, headless; needs Linux + Mesa
+           (on macOS: only ref.png, from Apple's OpenGL)
   all      both
 
 environment:
@@ -145,6 +147,24 @@ source_html() {
     fi
 }
 
+# The demo's native desktop GL references, demos/<demo>/native/<name>.png
+# with a one-line <name>.txt caption, copied next to the page; prints the
+# path of the page's HTML for them (empty without any).
+native_html() {
+    local out=$1 html=$here/out/native-$demo.html png name
+    : >"$html"
+    for png in "$demo_dir"/native/*.png; do
+        [ -f "$png" ] || continue
+        name=$(basename "$png" .png)
+        mkdir -p "$out/native"
+        cp "$png" "$out/native/"
+        printf '    <figure><figcaption>%s</figcaption><img src="native/%s.png" alt="%s"></figure>\n' \
+            "$(html_escape <"$demo_dir/native/$name.txt" 2>/dev/null || echo "$name")" "$name" "$name" >>"$html"
+    done
+    [ -s "$html" ] && { printf '  <section class="native">\n    <h2>Native desktop GL</h2>\n    <p class="hint">The same demo built against desktop OpenGL instead of gl4es, rendered once on each system named. A and B should match it. Freeze both at the time in the caption to compare.</p>\n    <div class="ab">\n'; cat "$html"; printf '    </div>\n  </section>\n'; } >"$html.tmp" && mv "$html.tmp" "$html"
+    echo "$html"
+}
+
 html_escape() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/"/\&quot;/g'; }
 
 # The A/B page's commit section: A itself, then every commit in A..B.
@@ -211,6 +231,7 @@ build_web() {
         -e "s|@SOURCE@|$(source_html)|g" \
         "$here/harness/ab.html" \
         | awk -v f="$commits" '/@COMMITS@/ { while ((getline l < f) > 0) print l; next } { print }' \
+        | awk -v f="$(native_html "$out")" '/@NATIVE@/ { while ((getline l < f) > 0) print l; next } { print }' \
         >"$out/index.html"
     [ -f "$demo_dir/README.md" ] && cp "$demo_dir/README.md" "$out/README.md"
     site_index
@@ -247,12 +268,40 @@ build_native() {
     for side in ref a b; do
         rm -f "$out/$side.ppm" "$out/$side.png"
         # A side that crashes is a result, not a build failure.
-        (cd "$out" && ./$side --screenshot "$side.ppm" ${frame:+--t "$frame"}) \
+        (cd "$out" && ./$side --screenshot "$side.ppm" ${frame:+--t "$frame"} >"$side.txt") \
             || { echo "$side: exited with status $?" >&2; continue; }
-        command -v pnmtopng >/dev/null && pnmtopng "$out/$side.ppm" >"$out/$side.png" && rm "$out/$side.ppm"
+        grep -v '^renderer: ' "$out/$side.txt"
+        to_png "$out/$side.ppm" "$out/$side.png" && rm "$out/$side.ppm"
     done
-    echo "native: $out/{ref,a,b}.png"
+    # The reference's renderer and frame time, for a demo's native/ panel:
+    # copy ref.png and ref.caption to demos/<demo>/native/<name>.{png,txt}.
+    sed -n "s/^renderer: \(.*\)/\1, at t = ${frame:-1} s/p" "$out/ref.txt" >"$out/ref.caption"
+    echo "native: $out/{ref,a,b}.png (reference: $(cat "$out/ref.caption"))"
     bench_native "$out"
+}
+
+# PPM to PNG, with whichever converter the host has.
+to_png() {
+    if command -v pnmtopng >/dev/null; then pnmtopng "$1" >"$2"
+    elif command -v sips >/dev/null; then sips -s format png "$1" --out "$2" >/dev/null
+    else python3 -c 'import sys; from PIL import Image; Image.open(sys.argv[1]).save(sys.argv[2])' "$1" "$2"
+    fi
+}
+
+# macOS: only the reference, Apple's OpenGL (legacy 2.1 profile) through CGL;
+# gl4es has no GLES driver to draw on there.
+build_native_mac() {
+    local out=$here/out/native/$demo frame=${AB_FRAME_T:-}
+    mkdir -p "$out"
+    ${CC:-cc} -O2 -Wall -I"$here/harness" "$here/harness/native.c" "$here/harness/common.c" \
+        "$demo_dir/main.c" -DAB_SIDE="\"ref\"" -DAB_REF="\"apple\"" -DAB_SHA="\"-\"" \
+        -DAB_DESKTOP_GL -DGL_SILENCE_DEPRECATION -framework OpenGL -lm -o "$out/ref"
+    [ -n "${AB_BUILD_ONLY:-}" ] && { echo "native: $out/ref"; return; }
+    (cd "$out" && ./ref --screenshot ref.ppm ${frame:+--t "$frame"} >ref.txt) || return 1
+    grep -v '^renderer: ' "$out/ref.txt"
+    to_png "$out/ref.ppm" "$out/ref.png"
+    sed -n "s/^renderer: \(.*\)/\1, at t = ${frame:-1} s/p" "$out/ref.txt" >"$out/ref.caption"
+    echo "native: $out/ref.png (reference: $(cat "$out/ref.caption"))"
 }
 
 # Frame time of ref, A and B rendering the same frame headless, and B
@@ -327,7 +376,7 @@ check_native() {
 
 case $target in
 web)    check_web; build_web ;;
-native) check_native; build_native ;;
+native) if [ "$(uname -s)" = Darwin ]; then build_native_mac; else check_native; build_native; fi ;;
 all)    check_web; check_native; build_web; build_native ;;
 *)      echo "unknown target: $target" >&2; exit 1 ;;
 esac

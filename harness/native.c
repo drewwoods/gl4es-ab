@@ -1,5 +1,7 @@
 /* Native host: Mesa through EGL, either headless (surfaceless platform and a
- * pbuffer) or in an X11 window.
+ * pbuffer) or in an X11 window. On macOS, Apple's OpenGL through CGL, headless
+ * only, and only the -DAB_DESKTOP_GL reference: a legacy (2.1) context
+ * drawing into a framebuffer object, as there is no window.
  *   gl4es build:        GLES2 context; gl4es (-DNOX11 -DNOEGL -DSTATICLIB,
  *                       statically linked) dlopens libGLESv2 and draws on it.
  *   -DAB_DESKTOP_GL:    desktop GL compatibility context, no gl4es; the
@@ -19,11 +21,16 @@
 #include <string.h>
 #include <sys/time.h>
 
+#ifdef __APPLE__
+#include <OpenGL/OpenGL.h>
+#include <OpenGL/glext.h>
+#else
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
+#endif
 
 #ifndef AB_DESKTOP_GL
 #include <gl4esinit.h>
@@ -31,6 +38,53 @@
 
 #include "ab.h"
 
+#ifdef __APPLE__
+static void die(const char *what)
+{
+    fprintf(stderr, "%s failed\n", what);
+    exit(1);
+}
+
+static void make_context(int win_x)
+{
+    if (win_x >= 0) {
+        fprintf(stderr, "--window isn't supported on macOS\n");
+        exit(1);
+    }
+    CGLPixelFormatAttribute attr[] = {
+        kCGLPFAOpenGLProfile, (CGLPixelFormatAttribute)kCGLOGLPVersion_Legacy,
+        kCGLPFAAccelerated, kCGLPFAColorSize, 24, kCGLPFAAlphaSize, 8,
+        kCGLPFADepthSize, 24, kCGLPFAStencilSize, 8, 0 };
+    CGLPixelFormatObj pf;
+    GLint npf;
+    CGLContextObj ctx;
+    if (CGLChoosePixelFormat(attr, &pf, &npf) != kCGLNoError || !pf)
+        die("CGLChoosePixelFormat");
+    if (CGLCreateContext(pf, NULL, &ctx) != kCGLNoError)
+        die("CGLCreateContext");
+    CGLDestroyPixelFormat(pf);
+    CGLSetCurrentContext(ctx);
+    GLuint fbo, rb[2];
+    glGenFramebuffersEXT(1, &fbo);
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbo);
+    glGenRenderbuffersEXT(2, rb);
+    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, rb[0]);
+    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_RGBA8, AB_W, AB_H);
+    glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+                                 GL_RENDERBUFFER_EXT, rb[0]);
+    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, rb[1]);
+    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH24_STENCIL8_EXT, AB_W, AB_H);
+    glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
+                                 GL_RENDERBUFFER_EXT, rb[1]);
+    glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT,
+                                 GL_RENDERBUFFER_EXT, rb[1]);
+    if (glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT) != GL_FRAMEBUFFER_COMPLETE_EXT)
+        die("framebuffer");
+    glViewport(0, 0, AB_W, AB_H);
+}
+
+static int pump_events(void) { return 1; }
+#else
 static EGLDisplay egl_dpy;
 static EGLSurface egl_surf;
 static Display *x_dpy;
@@ -122,6 +176,7 @@ static int pump_events(void)
     }
     return 1;
 }
+#endif
 
 static void write_ppm(const char *path)
 {
@@ -172,6 +227,10 @@ int main(int argc, char **argv)
     make_context(win_x);
 #ifndef AB_DESKTOP_GL
     initialize_gl4es(); /* no-op if gl4es's constructor already ran */
+#else
+    /* build.sh keeps this line as the caption of the native reference. */
+    printf("renderer: %s, %s\n", (const char *)glGetString(GL_RENDERER),
+           (const char *)glGetString(GL_VERSION));
 #endif
     demo_init();
     for (int i = 0; i < nsets; i++) {
@@ -199,8 +258,10 @@ int main(int argc, char **argv)
         ab_frame(ft);  /* includes gl4es_pre_swap() */
         if (shot && i == frames - 1)
             write_ppm(shot);
+#ifndef __APPLE__
         if (windowed)
             eglSwapBuffers(egl_dpy, egl_surf);
+#endif
 #ifndef AB_DESKTOP_GL
         gl4es_post_swap();
 #endif
