@@ -8,19 +8,20 @@ Five commits, all about how gl4es draws `GL_POINTS`:
 |---|---|
 | Draw GL_POINT_SMOOTH points round | `GL_POINT_SMOOTH` was tracked but ignored: smooth points were squares |
 | Apply glPointSize to the points drawn after it only | gl4es draws immediate-mode geometry later, in a batch, and read the point size when it drew it, so a later `glPointSize` resized points already in the batch |
-| Match GL's point-smooth coverage and alpha-test order | the first commit faded the outer 15% of the radius and applied the coverage after the alpha test; GL covers each pixel by how much of it is inside the circle, and applies that before the alpha test |
+| Note where GL_POINT_SMOOTH differs from GL | a comment only: the round points fade a fixed 15% of the radius and apply that coverage after the alpha test, where GL covers each pixel by its part inside the circle and applies that before the alpha test; a TODO in `fpe_shader.c` records a fix |
 | Compute the fixed-function eye-space position in highp | the eye-space position was mediump; drivers that run mediump as 16-bit floats (NVIDIA, AMD's radeonsi) overflowed past 256 units, and drew those points at the maximum size or not at all |
 | Default GL_POINT_SIZE_MAX to the largest point size | `GL_POINT_SIZE_MAX` started at 32, so larger points were drawn at 32; GL starts it at the implementation's largest point size |
 
-The first two are gl-repl's patches; the last three are new.
+The first two are gl-repl's patches.
 
 ## What the page shows
 
 Five rows of four points. Each row is the OpenGL below (the points sit at
 x = 150, 232, 314 and 396), and should look as described.
 
-**SMOOTH**: four round points with a one-pixel soft edge, 6 to 40 px wide.
-On A they're squares, and the 40 px one is 32 px wide.
+**SMOOTH**: four round points, 6 to 40 px wide. On A they're squares, and
+the 40 px one is 32 px wide. GL antialiases about one pixel at the edge;
+gl4es fades the outer 15% of the radius (see below).
 
 ```c
 glEnable(GL_POINT_SMOOTH);
@@ -34,7 +35,8 @@ glPointSize(40); glBegin(GL_POINTS); glVertex2f(396, 296); glEnd(); glFlush();
 
 **ALPHA TEST**: the same, with an alpha test. GL applies a smooth point's
 coverage to alpha before the alpha test, so the soft edge, where coverage
-is under 0.5, is cut off: round points with a hard edge. On A, squares.
+is under 0.5, is cut off: round points with a hard edge. On A, squares; on
+B, round points that keep their soft edge (see below).
 
 ```c
 glEnable(GL_POINT_SMOOTH);
@@ -105,16 +107,19 @@ hold Shift for A's. In Chrome on a Mac:
 
 | Native reference | B differs by | A differs by |
 |---|---|---|
-| Apple M2 | 308 px | 6,704 px |
-| Mesa iris (Intel UHD) | 424 px | 6,680 px |
-| Mesa radeonsi (RX 5700 XT) | 552 px | 6,760 px |
-| NVIDIA RTX 5050, driver 610.43 | 564 px | 6,774 px |
+| Apple M2 | 808 px | 6,704 px |
+| Mesa iris (Intel UHD) | 660 px | 6,680 px |
+| Mesa radeonsi (RX 5700 XT) | 664 px | 6,760 px |
+| NVIDIA RTX 5050, driver 610.43 | 706 px | 6,774 px |
 
-B's differences are all on the antialiased edges of the smooth points,
-where the desktop implementations also disagree with each other. The
-coverage at the edge decides it: GL defines it as the part of each pixel
-inside the circle, so a point should cover its area, πr². Measured as a
-point's total brightness over πr², with sizes 1 to 12 px:
+B's differences are all on the edges of the smooth points: gl4es fades the
+outer 15% of the radius, so its large points look slightly smaller and
+softer than desktop GL's, and keeps that soft edge under the alpha test.
+The TODO in `fpe_shader.c` describes the GL behaviour and a fix: GL's
+coverage is the part of each pixel inside the circle, about
+`clamp(0.5 + r - d, 0, 1)` in pixels, applied before the alpha test. With it,
+B came within 308 to 564 px of the four references. Measured as a point's
+total brightness over its area, πr²:
 
 | | 2 px | 3 px | 5 px | 8 px | 12 px |
 |---|---|---|---|---|---|
@@ -122,11 +127,10 @@ point's total brightness over πr², with sizes 1 to 12 px:
 | NVIDIA | 1.25 | 1.14 | 0.91 | 0.87 | 0.89 |
 | Mesa iris | 0.32 | 0.81 | 0.87 | 0.86 | 0.90 |
 | Mesa radeonsi | 0.32 | 0.47 | 0.67 | 0.77 | 0.85 |
-| B | 0.66 | 1.04 | 1.01 | 0.95 | 0.97 |
+| gl4es with that fix | 0.66 | 1.04 | 1.01 | 0.95 | 0.97 |
 
-B follows the area, like Apple; NVIDIA and Mesa draw points from about
-5 px up slightly smaller, and radeonsi's small points are much fainter,
-because Mesa's formula puts the edge half a pixel inside the circle.
+It changes the antialiased edge of every smooth point, so it's left for a
+separate change.
 
 Before the highp commit, gl4es's points were badly wrong on the NVIDIA and
 AMD machines even on master: sizes past 256 units from the eye came out at

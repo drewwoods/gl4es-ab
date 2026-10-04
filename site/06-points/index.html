@@ -82,17 +82,17 @@
 <body class="">
 <main>
   <h1>06 · Point smoothing and point size</h1>
-  <div class="refs">A = original, ec16bedd88 · B = patched, c0ba9f86b9</div>
+  <div class="refs">A = original, ec16bedd88 · B = patched, 2089059b72</div>
   <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/06-points">demos/06-points</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/06-points/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/06-points/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/06-points/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
     <figure><figcaption>A · original <code>ec16bedd88</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
-    <figure><figcaption>B · patched <code>c0ba9f86b9</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+    <figure><figcaption>B · patched <code>2089059b72</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <section class="tests">
     <h2>What each row draws</h2>
     <p class="hint">The OpenGL each row of the demo runs, taken from main.c, and what it should look like.</p>
     <div class="grid">
-      <div class="test"><h3>SMOOTH</h3><p>Round points with a one-pixel soft edge, 6 to 40 px wide. Master draws squares, and the 40 px one 32 px wide.</p><pre><code>glColor3f(0.4f, 0.8f, 1.0f);
+      <div class="test"><h3>SMOOTH</h3><p>Round points, 6 to 40 px wide. Master draws squares, and the 40 px one 32 px wide. GL antialiases about one pixel at the edge; gl4es fades the outer 15% of the radius, a known gap (a TODO in fpe_shader.c).</p><pre><code>glColor3f(0.4f, 0.8f, 1.0f);
 glEnable(GL_POINT_SMOOTH);
 glEnable(GL_BLEND);
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -107,7 +107,7 @@ glBegin(GL_POINTS); glVertex2f(396, 296); glEnd(); glFlush();
 glDisable(GL_BLEND);
 glDisable(GL_POINT_SMOOTH);
 glPointSize(1);</code></pre></div>
-      <div class="test"><h3>ALPHA TEST</h3><p>As SMOOTH, with an alpha test. GL applies the coverage to alpha before the test, so the soft edge, where coverage is under 0.5, is cut off: round points with a hard edge. Master draws squares.</p><pre><code>glColor3f(1.0f, 0.75f, 0.2f);
+      <div class="test"><h3>ALPHA TEST</h3><p>As SMOOTH, with an alpha test. GL applies the coverage to alpha before the test, so the soft edge, where coverage is under 0.5, is cut off: round points with a hard edge. Master draws squares; with the patches gl4es draws round points but applies the coverage after the test, so the soft edge stays, a known gap (a TODO in fpe_shader.c).</p><pre><code>glColor3f(1.0f, 0.75f, 0.2f);
 glEnable(GL_POINT_SMOOTH);
 glEnable(GL_BLEND);
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -212,11 +212,11 @@ glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, range);</code></pre></div>
 <ol>
 <li><a href="https://github.com/drewwoods/gl4es/commit/c9c6e41e46d744cd87f7c7fe2aeb1b2aef375d56"><code>c9c6e41e46</code></a> src/gl: Draw GL_POINT_SMOOTH points round</li>
 <li><a href="https://github.com/drewwoods/gl4es/commit/d1cb948b9cf23b3f53b124df6fd119f8a6be01e5"><code>d1cb948b9c</code></a> src/gl: Apply glPointSize to the points drawn after it only</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/953d72addb6994b85c8a758c410edac498e1e14f"><code>953d72addb</code></a> src/gl: Match GL's point-smooth coverage and alpha-test order</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/b7441f511dfabf34b16793d03fbe165faafc6762"><code>b7441f511d</code></a> src/gl: Compute the fixed-function eye-space position in highp</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/c0ba9f86b981c89ac2623314da32bb203c3efc71"><code>c0ba9f86b9</code></a> src/gl: Default GL_POINT_SIZE_MAX to the largest point size</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/233f9e89e28d7b48b92a009ac3d743c1376ed4a9"><code>233f9e89e2</code></a> src/gl: Note where GL_POINT_SMOOTH differs from GL</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/9f08806c5497f402f97c2c5c1381b7675ae07f1c"><code>9f08806c54</code></a> src/gl: Compute the fixed-function eye-space position in highp</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/2089059b72ad014ed9e8d384b328890f3fc39ca1"><code>2089059b72</code></a> src/gl: Default GL_POINT_SIZE_MAX to the largest point size</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/ec16bedd8819...c0ba9f86b981">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/ec16bedd8819...2089059b72ad">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and
