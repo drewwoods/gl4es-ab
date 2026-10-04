@@ -255,12 +255,14 @@
     show('row-live', median(live.a), median(live.b));
   });
   function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
-  // A performance demo leads with the frame times, measured once on load.
+  // Every page measures each side alone once on load: the live row runs both
+  // sides at once, and they share the GPU process, so it can favour either.
+  // A performance demo also leads with the frame times.
   if (document.body.classList.contains('perf')) {
     var ab = document.querySelector('.ab');
     ab.parentNode.insertBefore(document.querySelector('.timing'), ab);
-    window.addEventListener('load', function() { setTimeout(function() { button.click(); }, 1500); });
   }
+  window.addEventListener('load', function() { setTimeout(function() { button.click(); }, 1500); });
   function setRun(side, on) {
     frames()[side === 'a' ? 0 : 1].contentWindow.postMessage({ run: on }, '*');
   }
