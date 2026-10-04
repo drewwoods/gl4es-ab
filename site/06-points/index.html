@@ -34,6 +34,10 @@
   .native .hint { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
   .native figcaption { font-weight: 400; font-size: 13px; }
   .native img { display: block; width: 100%; aspect-ratio: 480 / 360; image-rendering: pixelated; }
+  .native .shot { position: relative; }
+  .native .shot canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+  .native .delta-note { padding: 6px 10px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); }
+  .native .delta-note b { color: #ff2bd6; font-weight: 600; }
   .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0; }
   .controls input[type=range] { flex: 1; min-width: 160px; }
   .params { display: grid; grid-template-columns: max-content 1fr 4em; gap: 6px 12px;
@@ -79,7 +83,7 @@
   </div>
   <section class="native">
     <h2>Native desktop GL</h2>
-    <p class="hint">The same demo built against desktop OpenGL instead of gl4es, rendered once on each system named. A and B should match it. Freeze both at the time in the caption to compare.</p>
+    <p class="hint">The same demo built against desktop OpenGL instead of gl4es, rendered once on each system named. A and B should match them. Hover one to mark in magenta where B differs from it.</p>
     <div class="ab">
     <figure><figcaption>Apple M2, 2.1 Metal - 90.5, at t = 1 s</figcaption><img src="native/apple.png" alt="apple"></figure>
     <figure><figcaption>Mesa Intel(R) UHD Graphics (JSL), 4.6 (Compatibility Profile) Mesa 25.2.0-devel, at t = 1 s</figcaption><img src="native/mesa-iris.png" alt="mesa-iris"></figure>
@@ -307,6 +311,76 @@
     state.textContent = 'Measured at ' + new Date().toLocaleTimeString() + ': ' +
       done.a.length + ' windows of A, ' + done.b.length + ' of B.';
     button.disabled = false;
+  });
+
+  // Native references: hovering one freezes both sides at the reference's
+  // time and marks in magenta the pixels where B's frame differs from it
+  // (with Shift held, A's), using the same threshold as build.sh's checks:
+  // a luminance difference over 8.
+  var W = 480, H = 360;
+  function pixelsOf(src) {
+    var c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var g = c.getContext('2d');
+    g.drawImage(src, 0, 0, W, H);
+    return g.getImageData(0, 0, W, H).data;
+  }
+  document.querySelectorAll('.native figure').forEach(function(fig) {
+    var img = fig.querySelector('img'), cap = fig.querySelector('figcaption');
+    var m = /at t = ([0-9.]+) s/.exec(cap.textContent), at = m ? parseFloat(m[1]) : 1;
+    var box = document.createElement('div');
+    box.className = 'shot';
+    img.replaceWith(box);
+    box.append(img);
+    var overlay = document.createElement('canvas');
+    overlay.width = W; overlay.height = H; overlay.hidden = true;
+    box.append(overlay);
+    var note = document.createElement('div'), idle = 'Hover to mark where B differs from this';
+    note.className = 'delta-note';
+    note.textContent = idle;
+    fig.append(note);
+    var saved = null, side = 'b', hovering = false;
+    function render() {
+      var doc = frames()[side === 'a' ? 0 : 1].contentDocument;
+      var canvas = doc && doc.getElementById('canvas');
+      if (!canvas || !img.complete) return;
+      var ref = pixelsOf(img), got = pixelsOf(canvas);
+      var g = overlay.getContext('2d'), out = g.createImageData(W, H), n = 0;
+      for (var i = 0; i < ref.length; i += 4) {
+        var d = 0.299 * Math.abs(ref[i] - got[i]) + 0.587 * Math.abs(ref[i + 1] - got[i + 1]) +
+                0.114 * Math.abs(ref[i + 2] - got[i + 2]);
+        if (d > 8) {
+          out.data[i] = 255; out.data[i + 1] = 43; out.data[i + 2] = 214;
+          n++;
+        } else {
+          out.data[i] = ref[i] * 0.35; out.data[i + 1] = ref[i + 1] * 0.35; out.data[i + 2] = ref[i + 2] * 0.35;
+        }
+        out.data[i + 3] = 255;
+      }
+      g.putImageData(out, 0, 0);
+      overlay.hidden = false;
+      note.innerHTML = (side === 'a' ? 'A' : 'B') + ' differs from this in <b>' + n.toLocaleString() +
+        '</b> of ' + (W * H).toLocaleString() + ' pixels, at ' + at + ' s' +
+        (side === 'b' ? ' · hold Shift for A' : '');
+    }
+    fig.addEventListener('mouseenter', function() {
+      hovering = true;
+      saved = { checked: freeze.checked, value: t.value };
+      freeze.checked = true; t.value = at; send();
+      setTimeout(function() { if (hovering) render(); }, 250);  // a few frames at the new time
+    });
+    fig.addEventListener('mouseleave', function() {
+      hovering = false;
+      overlay.hidden = true;
+      note.textContent = idle;
+      if (saved) { freeze.checked = saved.checked; t.value = saved.value; send(); saved = null; }
+    });
+    window.addEventListener('keydown', function(e) {
+      if (hovering && e.key === 'Shift' && side !== 'a') { side = 'a'; render(); }
+    });
+    window.addEventListener('keyup', function(e) {
+      if (hovering && e.key === 'Shift' && side !== 'b') { side = 'b'; render(); }
+    });
   });
 </script>
 </body>

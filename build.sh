@@ -161,7 +161,7 @@ native_html() {
         printf '    <figure><figcaption>%s</figcaption><img src="native/%s.png" alt="%s"></figure>\n' \
             "$(html_escape <"$demo_dir/native/$name.txt" 2>/dev/null || echo "$name")" "$name" "$name" >>"$html"
     done
-    [ -s "$html" ] && { printf '  <section class="native">\n    <h2>Native desktop GL</h2>\n    <p class="hint">The same demo built against desktop OpenGL instead of gl4es, rendered once on each system named. A and B should match it. Freeze both at the time in the caption to compare.</p>\n    <div class="ab">\n'; cat "$html"; printf '    </div>\n  </section>\n'; } >"$html.tmp" && mv "$html.tmp" "$html"
+    [ -s "$html" ] && { printf '  <section class="native">\n    <h2>Native desktop GL</h2>\n    <p class="hint">The same demo built against desktop OpenGL instead of gl4es, rendered once on each system named. A and B should match them. Hover one to mark in magenta where B differs from it.</p>\n    <div class="ab">\n'; cat "$html"; printf '    </div>\n  </section>\n'; } >"$html.tmp" && mv "$html.tmp" "$html"
     echo "$html"
 }
 
