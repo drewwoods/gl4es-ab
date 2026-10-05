@@ -38,9 +38,10 @@ void demo_draw(double t)
     ab_label(8, 34, "LIST");
 
     /* test: SMOOTH
-     * Round points, 6 to 40 px wide. Master draws squares, and the 40 px one
-     * 32 px wide. GL antialiases about one pixel at the edge; gl4es fades the
-     * outer 15% of the radius, a known gap (a TODO in fpe_shader.c). */
+     * Round points, 6 to 40 px wide. Master draws squares. GL antialiases
+     * about one pixel at the edge; gl4es fades the outer 15% of the radius,
+     * and draws the 40 px one 32 px wide (see GL_POINT_SIZE_MAX): known gaps,
+     * in TODO.md. */
     glColor3f(0.4f, 0.8f, 1.0f);
     glEnable(GL_POINT_SMOOTH);
     glEnable(GL_BLEND);
@@ -142,7 +143,8 @@ void demo_draw(double t)
 
     /* test: GL_POINT_SIZE_MAX
      * Should start at the largest point size the implementation draws; the
-     * status line shows both. Master starts it at 32. */
+     * status line shows both. gl4es starts it at 32, a known gap (in
+     * TODO.md, with a fix on a branch). */
     GLfloat size_max = 0, range[2] = { 0, 0 };
     glGetFloatv(GL_POINT_SIZE_MAX, &size_max);
     glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, range);

@@ -82,17 +82,17 @@
 <body class="">
 <main>
   <h1>06 · Point smoothing and point size</h1>
-  <div class="refs">A = original, ec16bedd88 · B = patched, 183869bcec</div>
+  <div class="refs">A = original, ec16bedd88 · B = patched, d1325c4f27</div>
   <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/06-points">demos/06-points</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/06-points/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/06-points/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/06-points/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
     <figure><figcaption>A · original <code>ec16bedd88</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
-    <figure><figcaption>B · patched <code>183869bcec</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+    <figure><figcaption>B · patched <code>d1325c4f27</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <section class="tests">
     <h2>What each row draws</h2>
     <p class="hint">The OpenGL each row of the demo runs, taken from main.c, and what it should look like.</p>
     <div class="grid">
-      <div class="test"><h3>SMOOTH</h3><p>Round points, 6 to 40 px wide. Master draws squares, and the 40 px one 32 px wide. GL antialiases about one pixel at the edge; gl4es fades the outer 15% of the radius, a known gap (a TODO in fpe_shader.c).</p><pre><code>glColor3f(0.4f, 0.8f, 1.0f);
+      <div class="test"><h3>SMOOTH</h3><p>Round points, 6 to 40 px wide. Master draws squares. GL antialiases about one pixel at the edge; gl4es fades the outer 15% of the radius, and draws the 40 px one 32 px wide (see GL_POINT_SIZE_MAX): known gaps, in TODO.md.</p><pre><code>glColor3f(0.4f, 0.8f, 1.0f);
 glEnable(GL_POINT_SMOOTH);
 glEnable(GL_BLEND);
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -166,7 +166,7 @@ glColor3f(1.0f, 0.45f, 0.4f);
 glCallList(list);
 glFlush();
 glPointSize(1);</code></pre></div>
-      <div class="test"><h3>GL_POINT_SIZE_MAX</h3><p>Should start at the largest point size the implementation draws; the status line shows both. Master starts it at 32.</p><pre><code>GLfloat size_max = 0, range[2] = { 0, 0 };
+      <div class="test"><h3>GL_POINT_SIZE_MAX</h3><p>Should start at the largest point size the implementation draws; the status line shows both. gl4es starts it at 32, a known gap (in TODO.md, with a fix on a branch).</p><pre><code>GLfloat size_max = 0, range[2] = { 0, 0 };
 glGetFloatv(GL_POINT_SIZE_MAX, &amp;size_max);
 glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, range);</code></pre></div>
     </div>
@@ -212,11 +212,10 @@ glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, range);</code></pre></div>
 <ol>
 <li><a href="https://github.com/drewwoods/gl4es/commit/c9c6e41e46d744cd87f7c7fe2aeb1b2aef375d56"><code>c9c6e41e46</code></a> src/gl: Draw GL_POINT_SMOOTH points round</li>
 <li><a href="https://github.com/drewwoods/gl4es/commit/d1cb948b9cf23b3f53b124df6fd119f8a6be01e5"><code>d1cb948b9c</code></a> src/gl: Apply glPointSize to the points drawn after it only</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/233f9e89e28d7b48b92a009ac3d743c1376ed4a9"><code>233f9e89e2</code></a> src/gl: Note where GL_POINT_SMOOTH differs from GL</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/9f08806c5497f402f97c2c5c1381b7675ae07f1c"><code>9f08806c54</code></a> src/gl: Compute the fixed-function eye-space position in highp</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/183869bcec86876f4ea6a9bcf28d9a0f9321a3a5"><code>183869bcec</code></a> src/gl: Default GL_POINT_SIZE_MAX to the largest point size</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/eaea777c1a5862e1159466d8141e9667e3646c8b"><code>eaea777c1a</code></a> src/gl: Note where point smoothing and GL_POINT_SIZE_MAX differ from GL</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/d1325c4f27323e514b738791dc6e205e1100b850"><code>d1325c4f27</code></a> src/gl: Compute the fixed-function eye-space position in highp</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/ec16bedd8819...183869bcec86">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/ec16bedd8819...d1325c4f2732">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and

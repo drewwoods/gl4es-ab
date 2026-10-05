@@ -2,26 +2,29 @@
 
 ## The bugs
 
-Five commits, all about how gl4es draws `GL_POINTS`:
+Four commits, all about how gl4es draws `GL_POINTS`:
 
 | Commit | Before |
 |---|---|
 | Draw GL_POINT_SMOOTH points round | `GL_POINT_SMOOTH` was tracked but ignored: smooth points were squares |
 | Apply glPointSize to the points drawn after it only | gl4es draws immediate-mode geometry later, in a batch, and read the point size when it drew it, so a later `glPointSize` resized points already in the batch |
-| Note where GL_POINT_SMOOTH differs from GL | a comment only: the round points fade a fixed 15% of the radius and apply that coverage after the alpha test, where GL covers each pixel by its part inside the circle and applies that before the alpha test; a TODO in `fpe_shader.c` records a fix |
+| Note where point smoothing and GL_POINT_SIZE_MAX differ from GL | comments only: TODOs where the smooth-point coverage is a fixed 15% fade applied after the alpha test (GL covers each pixel by its part inside the circle, before the alpha test), and where `GL_POINT_SIZE_MAX` starts at 32 (GL starts it at the largest point size) |
 | Compute the fixed-function eye-space position in highp | the eye-space position was mediump; drivers that run mediump as 16-bit floats (NVIDIA, AMD's radeonsi) overflowed past 256 units, and drew those points at the maximum size or not at all |
-| Default GL_POINT_SIZE_MAX to the largest point size | `GL_POINT_SIZE_MAX` started at 32, so larger points were drawn at 32; GL starts it at the implementation's largest point size |
 
-The first two are gl-repl's patches.
+The first two are gl-repl's patches. Two fixes tested here are kept for
+later, with their code on branches: the smooth-point coverage, and
+`GL_POINT_SIZE_MAX` starting at the largest point size instead of 32. See
+TODO.md in this repo.
 
 ## What the page shows
 
 Five rows of four points. Each row is the OpenGL below (the points sit at
 x = 150, 232, 314 and 396), and should look as described.
 
-**SMOOTH**: four round points, 6 to 40 px wide. On A they're squares, and
-the 40 px one is 32 px wide. GL antialiases about one pixel at the edge;
-gl4es fades the outer 15% of the radius (see below).
+**SMOOTH**: four round points, 6 to 40 px wide. On A they're squares. GL
+antialiases about one pixel at the edge; gl4es fades the outer 15% of the
+radius (see below), and A and B both draw the 40 px point 32 px wide,
+because gl4es starts `GL_POINT_SIZE_MAX` at 32.
 
 ```c
 glEnable(GL_POINT_SMOOTH);
@@ -88,8 +91,9 @@ glFlush();
 ```
 
 The status line reports `glGetFloatv(GL_POINT_SIZE_MAX)`, which should
-start at the largest point size, `GL_ALIASED_POINT_SIZE_RANGE`'s maximum:
-32 on A, 511 on B in Chrome on a Mac.
+start at the largest point size, `GL_ALIASED_POINT_SIZE_RANGE`'s maximum
+(511 in Chrome on a Mac). gl4es starts it at 32, on A and B; the fix is on
+the `todo/point-size-max` branch.
 
 gl4es draws immediate-mode geometry later, in a batch. Each row ends with
 `glFlush`, so rows don't share a batch, and SMOOTH and ALPHA TEST flush
@@ -107,18 +111,19 @@ hold Shift for A's. In Chrome on a Mac:
 
 | Native reference | B differs by | A differs by |
 |---|---|---|
-| Apple M2 | 808 px | 6,704 px |
-| Mesa iris (Intel UHD) | 660 px | 6,680 px |
-| Mesa radeonsi (RX 5700 XT) | 664 px | 6,760 px |
-| NVIDIA RTX 5050, driver 610.43 | 706 px | 6,774 px |
+| Apple M2 | 1,552 px | 6,704 px |
+| Mesa iris (Intel UHD) | 1,404 px | 6,680 px |
+| Mesa radeonsi (RX 5700 XT) | 1,376 px | 6,760 px |
+| NVIDIA RTX 5050, driver 610.43 | 1,430 px | 6,774 px |
 
-B's differences are all on the edges of the smooth points: gl4es fades the
-outer 15% of the radius, so its large points look slightly smaller and
-softer than desktop GL's, and keeps that soft edge under the alpha test.
+B's differences are all in the smooth points: the 40 px ones are drawn
+32 px wide (`GL_POINT_SIZE_MAX`), and gl4es fades the outer 15% of the
+radius, so its large points look slightly smaller and softer than desktop
+GL's, and keep that soft edge under the alpha test.
 The TODO in `fpe_shader.c` describes the GL behaviour and a fix: GL's
 coverage is the part of each pixel inside the circle, about
-`clamp(0.5 + r - d, 0, 1)` in pixels, applied before the alpha test. With it,
-B came within 308 to 564 px of the four references. Measured as a point's
+`clamp(0.5 + r - d, 0, 1)` in pixels, applied before the alpha test. With both
+deferred fixes, B came within 308 to 564 px of the four references. Measured as a point's
 total brightness over its area, πr²:
 
 | | 2 px | 3 px | 5 px | 8 px | 12 px |
