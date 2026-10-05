@@ -1,6 +1,6 @@
 # Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
 # A: ec16bedd upstream master
-# B: d1325c4f "Compute the fixed-function eye-space position in highp", the
+# B: 05b7cc4b "Compute the fixed-function eye-space position in highp", the
 #    last of four point commits
 REF_A=ec16bedd8819c475326f4f1a3063772c6d986e06
-REF_B=d1325c4f27323e514b738791dc6e205e1100b850
+REF_B=05b7cc4b4025a8b622fabf6d925726e52d31e25a

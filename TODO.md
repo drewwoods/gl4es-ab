@@ -33,7 +33,7 @@ eye-space position in highp`. It changes nothing in gl-repl's web catalog
 
 - **GL_POINT_SIZE_MAX starts at 32** instead of the implementation's largest
   point size; a TODO at the default in `glstate.c` says so. Branch
-  `todo/point-size-max` (1a5ea5b4, on PR06's tip d1325c4f, so it
+  `todo/point-size-max` (61f1dc62, on PR06's tip 05b7cc4b, so it
   fast-forwards): the default becomes the driver's GL_ALIASED_POINT_SIZE_RANGE maximum, asked for
   lazily without the hardware test, falling back to 32. Checked against
   NVIDIA, Mesa radeonsi/iris and Apple; 0 px change in gl-repl's catalog.

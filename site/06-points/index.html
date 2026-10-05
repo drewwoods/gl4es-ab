@@ -82,11 +82,11 @@
 <body class="">
 <main>
   <h1>06 · Point smoothing and point size</h1>
-  <div class="refs">A = original, ec16bedd88 · B = patched, d1325c4f27</div>
+  <div class="refs">A = original, ec16bedd88 · B = patched, 05b7cc4b40</div>
   <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/06-points">demos/06-points</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/06-points/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/06-points/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/06-points/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
     <figure><figcaption>A · original <code>ec16bedd88</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
-    <figure><figcaption>B · patched <code>d1325c4f27</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+    <figure><figcaption>B · patched <code>05b7cc4b40</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <section class="tests">
     <h2>What each row draws</h2>
@@ -212,10 +212,10 @@ glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, range);</code></pre></div>
 <ol>
 <li><a href="https://github.com/drewwoods/gl4es/commit/c9c6e41e46d744cd87f7c7fe2aeb1b2aef375d56"><code>c9c6e41e46</code></a> src/gl: Draw GL_POINT_SMOOTH points round</li>
 <li><a href="https://github.com/drewwoods/gl4es/commit/d1cb948b9cf23b3f53b124df6fd119f8a6be01e5"><code>d1cb948b9c</code></a> src/gl: Apply glPointSize to the points drawn after it only</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/eaea777c1a5862e1159466d8141e9667e3646c8b"><code>eaea777c1a</code></a> src/gl: Note where point smoothing and GL_POINT_SIZE_MAX differ from GL</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/d1325c4f27323e514b738791dc6e205e1100b850"><code>d1325c4f27</code></a> src/gl: Compute the fixed-function eye-space position in highp</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/45b062ee7bbbabf54c12c80b4245438555e0fb9c"><code>45b062ee7b</code></a> src/gl: Note where point smoothing and GL_POINT_SIZE_MAX differ from GL</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/05b7cc4b4025a8b622fabf6d925726e52d31e25a"><code>05b7cc4b40</code></a> src/gl: Compute the fixed-function eye-space position in highp</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/ec16bedd8819...d1325c4f2732">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/ec16bedd8819...05b7cc4b4025">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and
