@@ -21,7 +21,7 @@ merge and drop the patches it carries.
 | color-material-face | #521, merged | |
 | point-smooth, point-size-batch | #522, merged | same code, plus a comment commit (TODOs) and the highp fix below, both new to gl-repl |
 | accum-fbo, accum-deferred-return, accum-deferred-scissor | not yet | needs braces for gcc-14 -Wdangling-else in accum_probe's SHUT_LOGD |
-| polygon-line-drawarrays, polygon-line-quad-edges, edge-flag | not yet | |
+| polygon-line-drawarrays, polygon-line-quad-edges, edge-flag | PR07 (`pr-07-polygon-lines`), open | **diverges**: drawarrays expansion is Emscripten-only and no longer zeroes a renderlist_t per draw (both invisible to gl-repl, which is web-only); edge-flag drops the `gl4es_edgeflag_test_*` hooks, so gl-repl's `packaging/web/bench/gl4es_edge_flag.c` needs another way to check the edge-flag allocation when it fast-forwards |
 | polygon-offset-line | not yet | after #519 it keeps two mirror globals in getter.c; move them into glstate for upstream |
 | line-width-quads | not yet | |
 
@@ -66,6 +66,8 @@ eye-space position in highp`. It changes nothing in gl-repl's web catalog
   on a GLES1 backend clip-plane equations aren't restored.
 - #521 color material: glColor inside glBegin/glEnd while compiling a display
   list already updates the current color, and now the tracked material too.
+- PR07 polygon-mode lines: triangle strips and fans still ignore edge flags,
+  and glEdgeFlagPointer (edge flags in vertex arrays) is still a stub.
 
 ## Found while testing, not fixed
 

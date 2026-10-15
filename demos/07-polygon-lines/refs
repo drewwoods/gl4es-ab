@@ -1,0 +1,6 @@
+# Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
+# A: a025615b upstream master
+# B: 73ed9b1f "Implement glEdgeFlag for polygon-mode lines", the last of
+#    three polygon-mode line commits
+REF_A=a025615bc79ac43ec911dced8fe5b8eb45a0b72d
+REF_B=73ed9b1f2599cac6ced0f044cd09703dbc79bd40
