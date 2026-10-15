@@ -21,9 +21,9 @@ merge and drop the patches it carries.
 | color-material-face | #521, merged | |
 | point-smooth, point-size-batch | #522, merged | same code, plus a comment commit (TODOs) and the highp fix below, both new to gl-repl |
 | accum-fbo, accum-deferred-return, accum-deferred-scissor | not yet | needs braces for gcc-14 -Wdangling-else in accum_probe's SHUT_LOGD |
-| polygon-line-drawarrays, polygon-line-quad-edges, edge-flag | PR07 (`pr-07-polygon-lines`), open | **diverges**: drawarrays expansion is Emscripten-only and no longer zeroes a renderlist_t per draw (both invisible to gl-repl, which is web-only); edge-flag drops the `gl4es_edgeflag_test_*` hooks, so gl-repl's `packaging/web/bench/gl4es_edge_flag.c` needs another way to check the edge-flag allocation when it fast-forwards |
+| polygon-line-drawarrays, polygon-line-quad-edges, edge-flag | PR07 (`pr-07-polygon-lines`), open | **diverges**: drawarrays expansion is Emscripten-only and no longer zeroes a renderlist_t per draw (both invisible to gl-repl, which is web-only); edge-flag drops the `gl4es_edgeflag_test_*` hooks, so gl-repl's `packaging/web/bench/gl4es_edge_flag.c` needs another way to check the edge-flag allocation when it fast-forwards: only `test_fill_prebegin_capacity` uses the hooks; plan is to drop its capacity assertion and keep the coverage check (user decides at the fast-forward). gl-repl A/B with its remaining stack on PR07: 0 of 43 catalog examples differ, no oracle regressions |
 | polygon-offset-line | not yet | after #519 it keeps two mirror globals in getter.c; move them into glstate for upstream |
-| line-width-quads | not yet | |
+| line-width-quads | not yet | doesn't apply on top of PR07: its `} /* !wide_drew */` closing brace in listdraw.c must now go just before PR07's `if (use_line_arrays && line_arrays == &transient_line_arrays)` guard around `clear_line_arrays()`, so the clear stays outside the wide-line block; regenerate gl-repl's patch with that when it moves past PR07 |
 
 #522 adds code gl-repl doesn't have: `src/gl: Compute the fixed-function
 eye-space position in highp`. It changes nothing in gl-repl's web catalog
