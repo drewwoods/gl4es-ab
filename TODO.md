@@ -19,13 +19,13 @@ merge and drop the patches it carries.
 | getbooleanv-local-state | #519, merged | |
 | pushattrib-gaps, pushattrib-texenv | #520, merged | split into five commits, same code |
 | color-material-face | #521, merged | |
-| point-smooth, point-size-batch | PR06 (`pr-06-points`), open | same code, plus a comment commit and the highp fix below, both new to gl-repl |
+| point-smooth, point-size-batch | #522, merged | same code, plus a comment commit (TODOs) and the highp fix below, both new to gl-repl |
 | accum-fbo, accum-deferred-return, accum-deferred-scissor | not yet | needs braces for gcc-14 -Wdangling-else in accum_probe's SHUT_LOGD |
 | polygon-line-drawarrays, polygon-line-quad-edges, edge-flag | not yet | |
 | polygon-offset-line | not yet | after #519 it keeps two mirror globals in getter.c; move them into glstate for upstream |
 | line-width-quads | not yet | |
 
-PR06 adds code gl-repl doesn't have: `src/gl: Compute the fixed-function
+#522 adds code gl-repl doesn't have: `src/gl: Compute the fixed-function
 eye-space position in highp`. It changes nothing in gl-repl's web catalog
 (Chrome runs mediump at 32 bits).
 
