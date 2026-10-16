@@ -22,8 +22,8 @@ merge and drop the patches it carries.
 | point-smooth, point-size-batch | #522, merged | same code, plus a comment commit (TODOs) and the highp fix below, both new to gl-repl |
 | accum-fbo, accum-deferred-return, accum-deferred-scissor | not yet | needs braces for gcc-14 -Wdangling-else in accum_probe's SHUT_LOGD |
 | polygon-line-drawarrays, polygon-line-quad-edges, edge-flag | PR07 (`pr-07-polygon-lines`), open | **diverges**: drawarrays expansion is Emscripten-only and no longer zeroes a renderlist_t per draw (both invisible to gl-repl, which is web-only); edge-flag drops the `gl4es_edgeflag_test_*` hooks, so gl-repl's `packaging/web/bench/gl4es_edge_flag.c` needs another way to check the edge-flag allocation when it fast-forwards: only `test_fill_prebegin_capacity` uses the hooks; plan is to drop its capacity assertion and keep the coverage check (user decides at the fast-forward). gl-repl A/B with its remaining stack on PR07: 0 of 43 catalog examples differ, no oracle regressions |
-| polygon-offset-line | not yet | after #519 it keeps two mirror globals in getter.c; move them into glstate for upstream |
-| line-width-quads | not yet | doesn't apply on top of PR07: its `} /* !wide_drew */` closing brace in listdraw.c must now go just before PR07's `if (use_line_arrays && line_arrays == &transient_line_arrays)` guard around `clear_line_arrays()`, so the clear stays outside the wide-line block; regenerate gl-repl's patch with that when it moves past PR07 |
+| polygon-offset-line | PR08 (`pr-08-polygon-offset-line`, on PR07), open | **diverges**: factor/units live in `glstate` instead of the `gl4es_mirror_polygon_offset_*` globals, the startup glGetError drain is bounded (16 tries), and its glLineWidth hunk and `gl4es_mvp_load_identity()` moved to PR09 (combined code after PR09 is unchanged); none of it is visible to gl-repl |
+| line-width-quads | PR09 (`pr-09-line-width`, on PR08), open | gl-repl's code as its first commit (plus PR08's moved glLineWidth hunk), then **two new commits**: wide lines widened along the minor axis as GL specifies (visible in gl-repl: diagonal wide lines get thinner, ends axis-aligned), and quads used only where the driver's largest width is 1 (invisible on the web). Port note from PR07 still applies: it didn't apply on top of PR07: its `} /* !wide_drew */` closing brace in listdraw.c must now go just before PR07's `if (use_line_arrays && line_arrays == &transient_line_arrays)` guard around `clear_line_arrays()`, so the clear stays outside the wide-line block; regenerate gl-repl's patch with that when it moves past PR07 |
 
 #522 adds code gl-repl doesn't have: `src/gl: Compute the fixed-function
 eye-space position in highp`. It changes nothing in gl-repl's web catalog
@@ -68,6 +68,13 @@ eye-space position in highp`. It changes nothing in gl-repl's web catalog
   list already updates the current color, and now the tracked material too.
 - PR07 polygon-mode lines: triangle strips and fans still ignore edge flags,
   and glEdgeFlagPointer (edge flags in vertex arrays) is still a stub.
+- PR08 polygon offset for lines: only `units` is applied to lines, not the
+  slope-dependent `factor`; GL_POLYGON_OFFSET_POINT isn't tracked.
+- PR09 wide lines: emulated widths stop at 64 px, GL_LINE_SMOOTH isn't
+  applied to the quads, and with a clip plane enabled wide lines are still
+  one pixel wide on WebGL. Natively, gl4es's wide lines (drawn by the GLES
+  driver) differ from the same machine's desktop GL by about 330 px on demo
+  09, before and after PR09.
 
 ## Found while testing, not fixed
 

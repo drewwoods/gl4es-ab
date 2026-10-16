@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>08 · Polygon offset for polygon-mode lines</title>
+<style>
+  :root {
+    --bg: #fafafa; --fg: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7; --panel: #fff;
+    --good: #1a7f37; --bad: #c62828; --accent: #0a66d8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161617; --fg: #f5f5f7; --muted: #a1a1a6; --line: #3a3a3c; --panel: #1f1f21;
+      --good: #4ac26b; --bad: #ff6b6b; --accent: #6cb4ff;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161617; --fg: #f5f5f7; --muted: #a1a1a6; --line: #3a3a3c; --panel: #1f1f21;
+    --good: #4ac26b; --bad: #ff6b6b; --accent: #6cb4ff;
+  }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg);
+         font: 15px/1.5 system-ui, -apple-system, sans-serif; }
+  main { max-width: 1000px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .refs { color: var(--muted); font: 13px ui-monospace, Menlo, monospace; }
+  .source { font-size: 14px; margin: 4px 0 16px; }
+  .ab { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  figcaption { padding: 8px 10px; font-weight: 600; border-bottom: 1px solid var(--line); }
+  figcaption code { font-weight: 400; color: var(--muted); }
+  iframe { display: block; width: 100%; aspect-ratio: 480 / 410; border: 0; }
+  .tests { margin-top: 16px; }
+  .tests .hint { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+  .tests .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  .test { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+  .test h3 { margin: 0; font-size: 14px; }
+  .test p { margin: 4px 0 8px; font-size: 13px; color: var(--muted); }
+  .test pre { margin: 0; overflow-x: auto; font: 12px/1.45 ui-monospace, Menlo, monospace; }
+  .native { margin-top: 16px; }
+  .native .hint { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+  .native figcaption { font-weight: 400; font-size: 13px; }
+  .native img { display: block; width: 100%; aspect-ratio: 480 / 360; image-rendering: pixelated; }
+  .native .shot { position: relative; }
+  .native .shot canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+  .native .delta-note { padding: 6px 10px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); }
+  .native .delta-note b { color: #ff2bd6; font-weight: 600; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0; }
+  .controls input[type=range] { flex: 1; min-width: 160px; }
+  .params { display: grid; grid-template-columns: max-content 1fr 4em; gap: 6px 12px;
+            align-items: center; margin: 0 0 16px; }
+  .params[hidden] { display: none; }
+  .params label { font: 13px ui-monospace, Menlo, monospace; }
+  .params output { font: 13px ui-monospace, Menlo, monospace; text-align: right; }
+  .params .row { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; }
+  .params .hint { color: var(--muted); font-size: 13px; }
+  .timing { margin: 16px 0; }
+  .timing table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .timing th, .timing td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .timing th { font-weight: 600; font-size: 13px; color: var(--muted); }
+  .timing td.ms { font: 15px ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .timing td.delta { font-weight: 700; font-size: 17px; }
+  .perf .timing { margin-top: 0; padding: 12px 14px; border: 1px solid var(--line);
+                  border-radius: 8px; background: var(--panel); }
+  .timing .faster { color: var(--good); }
+  .timing .slower { color: var(--bad); }
+  .timing .same { color: var(--muted); font-weight: 400; }
+  .timing .bar { display: block; height: 4px; margin-top: 4px; border-radius: 2px; background: var(--muted); }
+  .timing .bar.b { background: var(--accent); }
+  .timing .head { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; }
+  .timing .head h2 { margin: 0; }
+  .timing .hint { color: var(--muted); font-size: 13px; }
+  .notes, .commits { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 8px; }
+  h2 { font-size: 16px; margin: 4px 0 8px; }
+  .commits p, .commits ol { margin: 6px 0; }
+  .commits li { margin: 4px 0; overflow-wrap: anywhere; }
+  a { color: #0a66d8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) a { color: #6cb4ff; } }
+  :root[data-theme="dark"] a { color: #6cb4ff; }
+</style>
+</head>
+<body class="">
+<main>
+  <h1>08 · Polygon offset for polygon-mode lines</h1>
+  <div class="refs">A = original, 73ed9b1f25 · B = patched, 27d2839f4d</div>
+  <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/08-polygon-offset-line">demos/08-polygon-offset-line</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/08-polygon-offset-line/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/08-polygon-offset-line/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/08-polygon-offset-line/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
+  <div class="ab">
+    <figure><figcaption>A · original <code>73ed9b1f25</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
+    <figure><figcaption>B · patched <code>27d2839f4d</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+  </div>
+  <section class="tests">
+    <h2>What each row draws</h2>
+    <p class="hint">The OpenGL each row of the demo runs, taken from main.c, and what it should look like.</p>
+    <div class="grid">
+      <div class="test"><h3>THE GRID</h3><p>Every row draws this: a 10 x 2 grid of 20 px quads, its depth rising from -0.5 at the left to 0.5 at the right, filled and then as lines. Rows start at half-pixel coordinates so 1-pixel lines fall on pixel centers, where every implementation puts them in the same row.</p><pre><code>static void grid(float x, float y)
+{
+glBegin(GL_QUADS);
+for (int j = 0; j &lt; 2; j++)
+    for (int i = 0; i &lt; 10; i++) {
+        float x0 = x + i * 20, x1 = x0 + 20, y0 = y + j * 20, y1 = y0 + 20;
+        float z0 = -0.5f + i * 0.1f, z1 = z0 + 0.1f;
+        glVertex3f(x0, y0, z0);
+        glVertex3f(x1, y0, z1);
+        glVertex3f(x1, y1, z1);
+        glVertex3f(x0, y1, z0);
+    }
+glEnd();
+}
+
+static void faces(float x, float y)
+{
+glColor3f(0.20f, 0.24f, 0.32f);
+glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+grid(x, y);
+}</code></pre></div>
+      <div class="test"><h3>NO OFFSET</h3><p>The control: outlines at their faces' depth, no offset. They z-fight with the faces and most of them are hidden, on every implementation.</p><pre><code>faces(160.5f, 286.5f);
+glColor3f(0.4f, 0.8f, 1.0f);
+glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+grid(160.5f, 286.5f);
+glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);</code></pre></div>
+      <div class="test"><h3>OFFSET LINE</h3><p>The same, with GL_POLYGON_OFFSET_LINE pulling the outlines toward the eye: the whole grid shows. Master rejects the enable (GL_INVALID_ENUM) and most lines stay hidden. Only units are used: gl4es doesn't apply the factor, the slope part, to lines.</p><pre><code>faces(160.5f, 206.5f);
+glColor3f(1.0f, 0.75f, 0.2f);
+glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+glEnable(GL_POLYGON_OFFSET_LINE);
+glPolygonOffset(0, -32);
+grid(160.5f, 206.5f);
+glDisable(GL_POLYGON_OFFSET_LINE);
+glPolygonOffset(0, 0);
+glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);</code></pre></div>
+      <div class="test"><h3>PUSH / POP</h3><p>Offset set inside glPushAttrib(GL_POLYGON_BIT) is undone by the pop: these outlines have no offset and are mostly hidden, and the status line reads the enable and units back. Master keeps the units after the pop, and can't answer for the enable.</p><pre><code>glPolygonOffset(0, 0);
+glPushAttrib(GL_POLYGON_BIT);
+glEnable(GL_POLYGON_OFFSET_LINE);
+glPolygonOffset(0, -32);
+glPopAttrib();
+faces(160.5f, 126.5f);
+glColor3f(0.4f, 0.9f, 0.5f);
+glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+grid(160.5f, 126.5f);
+glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+GLboolean enabled = glIsEnabled(GL_POLYGON_OFFSET_LINE);
+GLfloat units = 99;
+glGetFloatv(GL_POLYGON_OFFSET_UNITS, &amp;units);</code></pre></div>
+    </div>
+  </section>
+  <section class="native">
+    <h2>Native desktop GL</h2>
+    <p class="hint">The same demo built against desktop OpenGL instead of gl4es, rendered once on each system named. A and B should match them. Hover one to mark in magenta where B differs from it.</p>
+    <div class="ab">
+    <figure><figcaption>Apple M2, 2.1 Metal - 90.5, at t = 1 s</figcaption><img src="native/apple.png" alt="apple"></figure>
+    <figure><figcaption>Mesa Intel(R) UHD Graphics (JSL), 4.6 (Compatibility Profile) Mesa 25.2.0-devel, at t = 1 s</figcaption><img src="native/mesa-iris.png" alt="mesa-iris"></figure>
+    <figure><figcaption>AMD Radeon RX 5700 XT (radeonsi, navi10, LLVM 20.1.2, DRM 3.61, 6.14.0-37-generic), 4.6 (Compatibility Profile) Mesa 25.2.8-0ubuntu0.24.04.2, at t = 1 s</figcaption><img src="native/mesa-radeonsi.png" alt="mesa-radeonsi"></figure>
+    </div>
+  </section>
+  <section class="timing">
+    <div class="head">
+      <h2>Frame time</h2>
+      <button id="measure">Measure</button>
+      <span class="hint" id="timing-state">Measure runs each side alone in turn for a cleaner number.</span>
+    </div>
+    <table>
+      <thead><tr><th></th><th>A · original</th><th>B · patched</th><th>B vs A</th></tr></thead>
+      <tbody>
+        <tr id="row-live"><td>Live, both running</td><td class="ms">…</td><td class="ms">…</td><td class="delta"></td></tr>
+        <tr id="row-measured"><td>Measured, each alone</td><td class="ms">–</td><td class="ms">–</td><td class="delta"></td></tr>
+      </tbody>
+    </table>
+    <p class="hint">CPU time per frame, from the start of the demo's drawing to the end of
+    <code>gl4es_pre_swap()</code>: the median of 30-frame averages. GPU work done after that isn't
+    counted; a driver call that waits for the GPU (a WebGL <code>getParameter</code>) is.
+    Measure pauses one side while timing the other, 3 rounds of 2.5 s or more each.</p>
+  </section>
+  <div class="controls">
+    <label><input type="checkbox" id="freeze"> Freeze both at</label>
+    <input type="range" id="t" min="0" max="60" step="0.01" value="0">
+    <output id="tv">0.00 s</output>
+  </div>
+  <div class="params" id="params" hidden></div>
+  <section class="commits">
+    <h2>What changes from A to B</h2>
+<p>A is <a href="https://github.com/drewwoods/gl4es/commit/73ed9b1f2599cac6ced0f044cd09703dbc79bd40"><code>73ed9b1f25</code></a> src/gl: Implement glEdgeFlag for polygon-mode lines</p>
+<p>B adds these commits:</p>
+<ol>
+<li><a href="https://github.com/drewwoods/gl4es/commit/27d2839f4d22fb6e2d0baeb366537195d2f2a116"><code>27d2839f4d</code></a> src/gl: Offset polygon-mode lines with GL_POLYGON_OFFSET_LINE</li>
+</ol>
+<p><a href="https://github.com/drewwoods/gl4es/compare/73ed9b1f2599...27d2839f4d22">Full diff A...B on GitHub</a></p>
+  </section>
+  <div class="notes">
+    A and B are separate pages because each links its own gl4es build, and
+    gl4es keeps global state. Both follow the wall clock, so they show the same
+    pose; freeze to compare a fixed frame. What to look for: <a href="README.md">README.md</a>.
+  </div>
+</main>
+<script>
+  var freeze = document.getElementById('freeze'), t = document.getElementById('t'),
+      tv = document.getElementById('tv');
+  function send() {
+    var v = freeze.checked ? parseFloat(t.value) : -1;
+    tv.textContent = parseFloat(t.value).toFixed(2) + ' s';
+    document.querySelectorAll('iframe').forEach(function(f) {
+      f.contentWindow.postMessage({ t: v }, '*');
+    });
+  }
+  freeze.addEventListener('change', function() { send(); clearLive(); });
+
+  // Values the demo registered with ab_param(): each side announces them;
+  // the first announcement builds the sliders, and every side that announces
+  // gets the current values back, so A and B always agree. Non-default values
+  // live in the URL hash, so a position can be linked.
+  var params = null, values = {};
+  var frames = function() { return document.querySelectorAll('iframe'); };
+  function sendParam(i, target) {
+    if (!target && typeof clearLive === 'function') clearLive();
+    var msg = { param: i, value: values[params[i].name] };
+    if (target) target.postMessage(msg, '*');
+    else frames().forEach(function(f) { f.contentWindow.postMessage(msg, '*'); });
+  }
+  function saveHash() {
+    var h = new URLSearchParams();
+    params.forEach(function(p) { if (values[p.name] !== p.value) h.set(p.name, values[p.name]); });
+    var s = h.toString();
+    history.replaceState(null, '', s ? '#' + s : location.pathname + location.search);
+  }
+  function buildParams(list) {
+    params = list;
+    var hash = new URLSearchParams(location.hash.slice(1));
+    var box = document.getElementById('params');
+    var inputs = [];
+    list.forEach(function(p, i) {
+      var v = hash.has(p.name) ? parseFloat(hash.get(p.name)) : p.value;
+      values[p.name] = v;
+      var label = document.createElement('label');
+      label.textContent = p.name;
+      label.htmlFor = 'param-' + i;
+      var range = document.createElement('input');
+      range.type = 'range'; range.id = 'param-' + i;
+      range.min = p.min; range.max = p.max; range.step = p.step; range.value = v;
+      var out = document.createElement('output');
+      out.textContent = v;
+      range.addEventListener('input', function() {
+        values[p.name] = parseFloat(range.value);
+        out.textContent = range.value;
+        sendParam(i);
+        saveHash();
+      });
+      inputs.push({ range: range, out: out, p: p });
+      paramInputs = inputs;
+      box.append(label, range, out);
+    });
+    var row = document.createElement('div');
+    row.className = 'row';
+    var reset = document.createElement('button');
+    reset.textContent = 'Reset';
+    reset.addEventListener('click', function() {
+      inputs.forEach(function(x, i) {
+        values[x.p.name] = x.p.value; x.range.value = x.p.value; x.out.textContent = x.p.value;
+        sendParam(i);
+      });
+      saveHash();
+    });
+    var hint = document.createElement('span');
+    hint.className = 'hint';
+    hint.textContent = 'Both sides get the same values; the URL keeps them.';
+    row.append(reset, hint);
+    box.append(row);
+    box.hidden = false;
+  }
+  // Editing the hash (or following a link to another position) applies it.
+  var paramInputs = [];
+  window.addEventListener('hashchange', function() {
+    if (!params) return;
+    var hash = new URLSearchParams(location.hash.slice(1));
+    paramInputs.forEach(function(x, i) {
+      var v = hash.has(x.p.name) ? parseFloat(hash.get(x.p.name)) : x.p.value;
+      values[x.p.name] = v; x.range.value = v; x.out.textContent = v;
+      sendParam(i);
+    });
+  });
+  window.addEventListener('message', function(e) {
+    if (!e.data || !e.data.abParams) return;
+    if (!params) buildParams(e.data.abParams);
+    params.forEach(function(p, i) { sendParam(i, e.source); });
+  });
+  t.addEventListener('input', function() { freeze.checked = true; send(); clearLive(); });
+
+  // Frame times: each side posts {abTiming: ms} per 30-frame window.
+  var live = { a: [], b: [] }, run = null, LIVE_WINDOWS = 20;
+  function sideOf(win) {
+    var f = frames();
+    return win === f[0].contentWindow ? 'a' : win === f[1].contentWindow ? 'b' : null;
+  }
+  function median(xs) {
+    if (!xs.length) return NaN;
+    var s = xs.slice().sort(function(x, y) { return x - y; }), m = s.length >> 1;
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  }
+  function fmt(ms) { return isNaN(ms) ? '…' : ms.toFixed(3) + ' ms'; }
+  function show(row, a, b) {
+    var cells = document.getElementById(row).children, max = Math.max(a, b) || 1;
+    [a, b].forEach(function(ms, i) {
+      cells[i + 1].innerHTML = fmt(ms) + (isNaN(ms) ? '' :
+        '<span class="bar' + (i ? ' b' : '') + '" style="width:' + (100 * ms / max) + '%"></span>');
+    });
+    var d = cells[3];
+    if (isNaN(a) || isNaN(b)) { d.textContent = ''; return; }
+    var diff = b - a, pct = 100 * diff / a;
+    if (Math.abs(pct) < 5) {
+      d.className = 'delta same';
+      d.textContent = 'no clear difference (' + (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%)';
+    } else if (diff < 0) {
+      d.className = 'delta faster';
+      d.textContent = (-diff).toFixed(3) + ' ms faster (' + pct.toFixed(0) + '%), ' +
+        (a / b).toFixed(1) + '× the speed';
+    } else {
+      d.className = 'delta slower';
+      d.textContent = diff.toFixed(3) + ' ms slower (+' + pct.toFixed(0) + '%)';
+    }
+  }
+  function clearLive() { live = { a: [], b: [] }; show('row-live', NaN, NaN); }
+  window.addEventListener('message', function(e) {
+    if (!e.data || typeof e.data.abTiming !== 'number') return;
+    var side = sideOf(e.source);
+    if (!side) return;
+    if (run) {
+      if (run.side === side && run.collect) run[side].push(e.data.abTiming);
+      return;
+    }
+    live[side].push(e.data.abTiming);
+    if (live[side].length > LIVE_WINDOWS) live[side].shift();
+    show('row-live', median(live.a), median(live.b));
+  });
+  function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+  // Every page measures each side alone once on load: the live row runs both
+  // sides at once, and they share the GPU process, so it can favour either.
+  // A performance demo also leads with the frame times.
+  if (document.body.classList.contains('perf')) {
+    var ab = document.querySelector('.ab');
+    ab.parentNode.insertBefore(document.querySelector('.timing'), ab);
+  }
+  window.addEventListener('load', function() { setTimeout(function() { button.click(); }, 1500); });
+  function setRun(side, on) {
+    frames()[side === 'a' ? 0 : 1].contentWindow.postMessage({ run: on }, '*');
+  }
+  var button = document.getElementById('measure'), state = document.getElementById('timing-state');
+  button.addEventListener('click', async function() {
+    button.disabled = true;
+    run = { a: [], b: [] };
+    var ROUNDS = 3;
+    for (var r = 1; r <= ROUNDS; r++) {
+      for (var side of ['a', 'b']) {
+        state.textContent = 'Timing ' + side.toUpperCase() + ' alone, round ' + r + ' of ' + ROUNDS + '…';
+        setRun(side === 'a' ? 'b' : 'a', false);
+        setRun(side, true);
+        run.side = side; run.collect = false;
+        await sleep(500);          // settle after the resume
+        run.collect = true;
+        // 2.5 s, and at least 3 windows per round even when frames are slow
+        var t0 = Date.now();
+        while (Date.now() - t0 < 2500 || (run[side].length < 3 * r && Date.now() - t0 < 30000))
+          await sleep(100);
+      }
+    }
+    var done = run;
+    run = null;
+    setRun('a', true); setRun('b', true);
+    clearLive();
+    show('row-measured', median(done.a), median(done.b));
+    state.textContent = 'Measured at ' + new Date().toLocaleTimeString() + ': ' +
+      done.a.length + ' windows of A, ' + done.b.length + ' of B.';
+    button.disabled = false;
+  });
+
+  // Native references: hovering one freezes both sides at the reference's
+  // time and marks in magenta the pixels where B's frame differs from it
+  // (with Shift held, A's), using the same threshold as build.sh's checks:
+  // a luminance difference over 8.
+  var W = 480, H = 360;
+  function pixelsOf(src) {
+    var c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var g = c.getContext('2d');
+    g.drawImage(src, 0, 0, W, H);
+    return g.getImageData(0, 0, W, H).data;
+  }
+  document.querySelectorAll('.native figure').forEach(function(fig) {
+    var img = fig.querySelector('img'), cap = fig.querySelector('figcaption');
+    var m = /at t = ([0-9.]+) s/.exec(cap.textContent), at = m ? parseFloat(m[1]) : 1;
+    var box = document.createElement('div');
+    box.className = 'shot';
+    img.replaceWith(box);
+    box.append(img);
+    var overlay = document.createElement('canvas');
+    overlay.width = W; overlay.height = H; overlay.hidden = true;
+    box.append(overlay);
+    var note = document.createElement('div'), idle = 'Hover to mark where B differs from this';
+    note.className = 'delta-note';
+    note.textContent = idle;
+    fig.append(note);
+    var saved = null, side = 'b', hovering = false;
+    function render() {
+      var doc = frames()[side === 'a' ? 0 : 1].contentDocument;
+      var canvas = doc && doc.getElementById('canvas');
+      if (!canvas || !img.complete) return;
+      var ref = pixelsOf(img), got = pixelsOf(canvas);
+      var g = overlay.getContext('2d'), out = g.createImageData(W, H), n = 0;
+      for (var i = 0; i < ref.length; i += 4) {
+        var d = 0.299 * Math.abs(ref[i] - got[i]) + 0.587 * Math.abs(ref[i + 1] - got[i + 1]) +
+                0.114 * Math.abs(ref[i + 2] - got[i + 2]);
+        if (d > 8) {
+          out.data[i] = 255; out.data[i + 1] = 43; out.data[i + 2] = 214;
+          n++;
+        } else {
+          out.data[i] = ref[i] * 0.35; out.data[i + 1] = ref[i + 1] * 0.35; out.data[i + 2] = ref[i + 2] * 0.35;
+        }
+        out.data[i + 3] = 255;
+      }
+      g.putImageData(out, 0, 0);
+      overlay.hidden = false;
+      note.innerHTML = (side === 'a' ? 'A' : 'B') + ' differs from this in <b>' + n.toLocaleString() +
+        '</b> of ' + (W * H).toLocaleString() + ' pixels, at ' + at + ' s' +
+        (side === 'b' ? ' · hold Shift for A' : '');
+    }
+    fig.addEventListener('mouseenter', function() {
+      hovering = true;
+      saved = { checked: freeze.checked, value: t.value };
+      freeze.checked = true; t.value = at; send();
+      setTimeout(function() { if (hovering) render(); }, 250);  // a few frames at the new time
+    });
+    fig.addEventListener('mouseleave', function() {
+      hovering = false;
+      overlay.hidden = true;
+      note.textContent = idle;
+      if (saved) { freeze.checked = saved.checked; t.value = saved.value; send(); saved = null; }
+    });
+    window.addEventListener('keydown', function(e) {
+      if (hovering && e.key === 'Shift' && side !== 'a') { side = 'a'; render(); }
+    });
+    window.addEventListener('keyup', function(e) {
+      if (hovering && e.key === 'Shift' && side !== 'b') { side = 'b'; render(); }
+    });
+  });
+</script>
+</body>
+</html>

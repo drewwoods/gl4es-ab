@@ -1,0 +1,6 @@
+# Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
+# A: 27d2839f PR08's tip (pr-08-polygon-offset-line), which PR09 builds on
+# B: 78326c67 "Emulate wide lines only where the driver draws none", the
+#    last of three line-width commits
+REF_A=27d2839f4d22fb6e2d0baeb366537195d2f2a116
+REF_B=78326c67b449b906d792dd55cdbaad8dbb69ea0f
