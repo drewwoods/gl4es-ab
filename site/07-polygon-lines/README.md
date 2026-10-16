@@ -36,10 +36,10 @@ Each row's OpenGL is listed on the page under the frames. In short:
 
 The **Native desktop GL** section shows the same demo on desktop OpenGL;
 hover one to mark where B differs from it. In Chrome, B matches Apple's
-and Mesa radeonsi's frames exactly (0 px) and differs from Mesa iris's by
-66 px of line rasterization; A differs from each by about 2,450 px.
-Natively, gl4es with these commits matches each machine's desktop GL to
-the pixel (radeonsi, iris and llvmpipe).
+and Mesa radeonsi's frames exactly (0 px) and differs from NVIDIA's by 12
+px and Mesa iris's by 66, of line rasterization; A differs from each by
+about 2,450 px. Natively, gl4es with these commits matches each machine's
+desktop GL to the pixel (NVIDIA, radeonsi, iris and llvmpipe).
 
 ## The frame time
 
@@ -60,8 +60,10 @@ at 480 objects, 3,850 uploads on A and 1,926 on B (B uploads more bytes,
 0.98 MB against 0.44 MB). Past about 1,000 draws per frame A falls off a
 cliff, likely Emscripten's pool of temporary buffers for client-side
 arrays being reused while the GPU still reads them; B stays at a few
-milliseconds. In gl-repl, a wireframe scene with about 130 such draws per
-frame went from 28.5 to 60 FPS.
+milliseconds. Where the cliff starts depends on the machine and browser:
+in desktop Chrome on another Mac, A already took 113 ms per frame at 160
+objects, against B's 2.0 ms. In gl-repl, a wireframe scene with about 130
+such draws per frame went from 28.5 to 60 FPS.
 
 Natively, drivers read client-side arrays in place, so the expansion would
 only add copying: with it, B was 6-17% slower than A on this demo on Intel

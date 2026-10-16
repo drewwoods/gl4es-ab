@@ -31,8 +31,8 @@ round either way.
 ## Against native desktop GL
 
 In Chrome, B matches Apple's OpenGL exactly (0 px) and differs from Mesa
-radeonsi by 342 px and Mesa iris by 524, on line edges; A differs from each
-by about 3,400 to 3,700 px. With only the first commit, B was 622 px from
+radeonsi by 342 px, NVIDIA by 462 and Mesa iris by 524, on line edges; A
+differs from each by about 3,400 to 3,700 px. With only the first commit, B was 622 px from
 Apple: a 45-degree line drawn perpendicular-wide is about 1.4 times thicker
 than GL's, with its ends cut across the line.
 

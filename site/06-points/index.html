@@ -88,6 +88,30 @@
     <figure><figcaption>A · original <code>ec16bedd88</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
     <figure><figcaption>B · patched <code>05b7cc4b40</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
+  <section class="timing">
+    <div class="head">
+      <h2>Frame time</h2>
+      <button id="measure">Measure</button>
+      <span class="hint" id="timing-state">Measure runs each side alone in turn for a cleaner number.</span>
+    </div>
+    <table>
+      <thead><tr><th></th><th>A · original</th><th>B · patched</th><th>B vs A</th></tr></thead>
+      <tbody>
+        <tr id="row-live"><td>Live, both running</td><td class="ms">…</td><td class="ms">…</td><td class="delta"></td></tr>
+        <tr id="row-measured"><td>Measured, each alone</td><td class="ms">–</td><td class="ms">–</td><td class="delta"></td></tr>
+      </tbody>
+    </table>
+    <p class="hint">CPU time per frame, from the start of the demo's drawing to the end of
+    <code>gl4es_pre_swap()</code>: the median of 30-frame averages. GPU work done after that isn't
+    counted; a driver call that waits for the GPU (a WebGL <code>getParameter</code>) is.
+    Measure pauses one side while timing the other, 3 rounds of 2.5 s or more each.</p>
+  </section>
+  <div class="controls">
+    <label><input type="checkbox" id="freeze"> Freeze both at</label>
+    <input type="range" id="t" min="0" max="60" step="0.01" value="0">
+    <output id="tv">0.00 s</output>
+  </div>
+  <div class="params" id="params" hidden></div>
   <section class="tests">
     <h2>What each row draws</h2>
     <p class="hint">The OpenGL each row of the demo runs, taken from main.c, and what it should look like.</p>
@@ -181,30 +205,6 @@ glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, range);</code></pre></div>
     <figure><figcaption>NVIDIA GeForce RTX 5050/PCIe/SSE2, 4.6.0 NVIDIA 610.43.02, at t = 1 s</figcaption><img src="native/nvidia.png" alt="nvidia"></figure>
     </div>
   </section>
-  <section class="timing">
-    <div class="head">
-      <h2>Frame time</h2>
-      <button id="measure">Measure</button>
-      <span class="hint" id="timing-state">Measure runs each side alone in turn for a cleaner number.</span>
-    </div>
-    <table>
-      <thead><tr><th></th><th>A · original</th><th>B · patched</th><th>B vs A</th></tr></thead>
-      <tbody>
-        <tr id="row-live"><td>Live, both running</td><td class="ms">…</td><td class="ms">…</td><td class="delta"></td></tr>
-        <tr id="row-measured"><td>Measured, each alone</td><td class="ms">–</td><td class="ms">–</td><td class="delta"></td></tr>
-      </tbody>
-    </table>
-    <p class="hint">CPU time per frame, from the start of the demo's drawing to the end of
-    <code>gl4es_pre_swap()</code>: the median of 30-frame averages. GPU work done after that isn't
-    counted; a driver call that waits for the GPU (a WebGL <code>getParameter</code>) is.
-    Measure pauses one side while timing the other, 3 rounds of 2.5 s or more each.</p>
-  </section>
-  <div class="controls">
-    <label><input type="checkbox" id="freeze"> Freeze both at</label>
-    <input type="range" id="t" min="0" max="60" step="0.01" value="0">
-    <output id="tv">0.00 s</output>
-  </div>
-  <div class="params" id="params" hidden></div>
   <section class="commits">
     <h2>What changes from A to B</h2>
 <p>A is <a href="https://github.com/drewwoods/gl4es/commit/ec16bedd8819c475326f4f1a3063772c6d986e06"><code>ec16bedd88</code></a> Merge pull request #521 from drewwoods/pr-05-color-material</p>

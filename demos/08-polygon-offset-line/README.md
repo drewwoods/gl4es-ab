@@ -35,8 +35,9 @@ offset, to lines.
 
 ## Against native desktop GL
 
-In the OFFSET LINE row, B matches all four references in Chrome (Apple 0
-px, Mesa radeonsi 0, Mesa iris 1); A differs by about 740 px. The two rows
+In the OFFSET LINE row, B matches all four references in Chrome (Apple,
+NVIDIA and Mesa radeonsi 0 px, Mesa iris 1); A differs by about 740 px.
+Natively, B matches NVIDIA's desktop GL to the pixel. The two rows
 without an offset z-fight, and that pattern differs between
 implementations (39 to 287 px), so the whole-frame counts on hover include
 it.
