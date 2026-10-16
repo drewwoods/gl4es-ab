@@ -49,8 +49,8 @@ Chrome on a Mac, each side alone:
 | objects | A | B |
 |---|---|---|
 | 0 | 0.31 ms | 0.25 ms |
-| 160 (default) | 1.21 ms | 1.04 ms |
-| 240 | 2.3 ms | 1.7 ms |
+| 160 | 1.21 ms | 1.04 ms |
+| 240 (default) | 1.58 ms | 1.18 ms |
 | 420 | 468 ms | 4.6 ms |
 | 600 | 398 ms | 2.8 ms |
 

@@ -6,7 +6,7 @@
  * each its own draw, for the frame time. */
 #include "ab.h"
 
-static GLfloat objects = 160;
+static GLfloat objects = 240;
 
 void demo_init(void)
 {
