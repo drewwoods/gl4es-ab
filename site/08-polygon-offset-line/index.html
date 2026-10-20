@@ -82,11 +82,11 @@
 <body class="">
 <main>
   <h1>08 · Polygon offset for polygon-mode lines</h1>
-  <div class="refs">A = original, 73ed9b1f25 · B = patched, 27d2839f4d</div>
+  <div class="refs">A = original, ffc123febf · B = patched, 00344c4628</div>
   <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/08-polygon-offset-line">demos/08-polygon-offset-line</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/08-polygon-offset-line/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/08-polygon-offset-line/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/08-polygon-offset-line/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
-    <figure><figcaption>A · original <code>73ed9b1f25</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
-    <figure><figcaption>B · patched <code>27d2839f4d</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+    <figure><figcaption>A · original <code>ffc123febf</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
+    <figure><figcaption>B · patched <code>00344c4628</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <section class="timing">
     <div class="head">
@@ -178,12 +178,12 @@ glGetFloatv(GL_POLYGON_OFFSET_UNITS, &amp;units);</code></pre></div>
   </section>
   <section class="commits">
     <h2>What changes from A to B</h2>
-<p>A is <a href="https://github.com/drewwoods/gl4es/commit/73ed9b1f2599cac6ced0f044cd09703dbc79bd40"><code>73ed9b1f25</code></a> src/gl: Implement glEdgeFlag for polygon-mode lines</p>
+<p>A is <a href="https://github.com/drewwoods/gl4es/commit/ffc123febf190f79c47e22e1d303e2c0388f1f47"><code>ffc123febf</code></a> src/gl: Add TODOs for edge-flag gaps</p>
 <p>B adds these commits:</p>
 <ol>
-<li><a href="https://github.com/drewwoods/gl4es/commit/27d2839f4d22fb6e2d0baeb366537195d2f2a116"><code>27d2839f4d</code></a> src/gl: Offset polygon-mode lines with GL_POLYGON_OFFSET_LINE</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/00344c4628b508fdd7c505e5a4a3fa08e4854f2d"><code>00344c4628</code></a> src/gl: Offset polygon-mode lines with GL_POLYGON_OFFSET_LINE</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/73ed9b1f2599...27d2839f4d22">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/ffc123febf19...00344c4628b5">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and

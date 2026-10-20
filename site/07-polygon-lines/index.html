@@ -82,11 +82,11 @@
 <body class="">
 <main>
   <h1>07 · Polygon-mode lines and edge flags</h1>
-  <div class="refs">A = original, a025615bc7 · B = patched, 73ed9b1f25</div>
+  <div class="refs">A = original, a025615bc7 · B = patched, ffc123febf</div>
   <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/07-polygon-lines">demos/07-polygon-lines</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/07-polygon-lines/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/07-polygon-lines/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/07-polygon-lines/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
     <figure><figcaption>A · original <code>a025615bc7</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
-    <figure><figcaption>B · patched <code>73ed9b1f25</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+    <figure><figcaption>B · patched <code>ffc123febf</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <section class="timing">
     <div class="head">
@@ -197,8 +197,9 @@ glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);</code></pre></div>
 <li><a href="https://github.com/drewwoods/gl4es/commit/bed9777d184eee51700cc2ec3cdd0a475f4153cd"><code>bed9777d18</code></a> src/gl: Draw polygon-mode lines with glDrawArrays</li>
 <li><a href="https://github.com/drewwoods/gl4es/commit/8af56a8b431045435784f2e3f37481ea657bb803"><code>8af56a8b43</code></a> src/gl: Outline quads and quad strips under polygon-mode lines</li>
 <li><a href="https://github.com/drewwoods/gl4es/commit/73ed9b1f2599cac6ced0f044cd09703dbc79bd40"><code>73ed9b1f25</code></a> src/gl: Implement glEdgeFlag for polygon-mode lines</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/ffc123febf190f79c47e22e1d303e2c0388f1f47"><code>ffc123febf</code></a> src/gl: Add TODOs for edge-flag gaps</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/a025615bc79a...73ed9b1f2599">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/a025615bc79a...ffc123febf19">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and

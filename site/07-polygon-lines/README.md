@@ -14,7 +14,8 @@ polygon's edges instead of filling it:
 All three are gl-repl's patches, with two changes: the glDrawArrays
 expansion applies to Emscripten builds only, since natively it only adds
 copying (6-17% slower on this demo), and the edge-flag patch drops two
-test-only hooks gl-repl's own bench used.
+test-only hooks gl-repl's own bench used. A fourth commit only adds
+TODOs for three edge-flag gaps gl-repl's patch leaves (see TODO.md).
 
 ## What the page shows
 
