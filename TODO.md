@@ -22,7 +22,7 @@ merge and drop the patches it carries.
 | point-smooth, point-size-batch | #522, merged | same code, plus a comment commit (TODOs) and the highp fix below, both new to gl-repl |
 | accum-fbo, accum-deferred-return, accum-deferred-scissor | not yet | needs braces for gcc-14 -Wdangling-else in accum_probe's SHUT_LOGD |
 | polygon-line-drawarrays, polygon-line-quad-edges, edge-flag | PR07 (`pr-07-polygon-lines`), open | **diverges**: a new fourth commit draws every quad-strip edge whatever the edge flag, as GL does (gl-repl A/B pending), and a fifth adds TODO comments only (edge-flag gaps, under Known gaps); drawarrays expansion is Emscripten-only and no longer zeroes a renderlist_t per draw (both invisible to gl-repl, which is web-only); edge-flag drops the `gl4es_edgeflag_test_*` hooks, so gl-repl's `packaging/web/bench/gl4es_edge_flag.c` needs another way to check the edge-flag allocation when it fast-forwards: only `test_fill_prebegin_capacity` uses the hooks; plan is to drop its capacity assertion and keep the coverage check (user decides at the fast-forward). gl-repl A/B with its remaining stack on PR07: 0 of 43 catalog examples differ, no oracle regressions |
-| polygon-offset-line | PR08 (`pr-08-polygon-offset-line`, on PR07), open | **diverges**: factor/units live in `glstate` instead of the `gl4es_mirror_polygon_offset_*` globals, the startup glGetError drain is bounded (16 tries), and its glLineWidth hunk and `gl4es_mvp_load_identity()` moved to PR09 (combined code after PR09 is unchanged); none of it is visible to gl-repl. gl-repl A/B (with PR09): 0 of 43 catalog examples differ from gl-repl's patch |
+| polygon-offset-line | PR08 (`pr-08-polygon-offset-line`, on PR07), open | **diverges**: a second commit adds TODO comments only (four gaps, under Known gaps); factor/units live in `glstate` instead of the `gl4es_mirror_polygon_offset_*` globals, the startup glGetError drain is bounded (16 tries), and its glLineWidth hunk and `gl4es_mvp_load_identity()` moved to PR09 (combined code after PR09 is unchanged); none of it is visible to gl-repl. gl-repl A/B (with PR09): 0 of 43 catalog examples differ from gl-repl's patch |
 | line-width-quads | PR09 (`pr-09-line-width`, on PR08), open | gl-repl's code as its first commit (plus PR08's moved glLineWidth hunk), then **two new commits**: wide lines widened along the minor axis as GL specifies (visible in gl-repl: diagonal wide lines get thinner, ends axis-aligned), and quads used only where the driver's largest width is 1 (invisible on the web). gl-repl A/B on 2026-10-15 (B = PR09 tip plus the accum patches): no oracle regressions, render bench unchanged; commit 1 alone is pixel-identical to gl-repl's patch (0 of 43); the tip changes 27 of 43 examples, all from commit 2: diagonal wide lines thinner by about cos(angle) (0.83 measured against 0.87 expected on the logo's 30° outline), horizontal and vertical lines unchanged. Example 3's red X axis is coplanar with the disc, so its depth tie flips; neither is more correct. Port note from PR07 still applies: it didn't apply on top of PR07: its `} /* !wide_drew */` closing brace in listdraw.c must now go just before PR07's `if (use_line_arrays && line_arrays == &transient_line_arrays)` guard around `clear_line_arrays()`, so the clear stays outside the wide-line block; regenerate gl-repl's patch with that when it moves past PR07 |
 
 #522 adds code gl-repl doesn't have: `src/gl: Compute the fixed-function
@@ -85,7 +85,24 @@ eye-space position in highp`. It changes nothing in gl-repl's web catalog
   fixed in PR07 (new to gl-repl). Mesa's desktop GL (iris, llvmpipe) has
   the same bug; Apple's doesn't.
 - PR08 polygon offset for lines: only `units` is applied to lines, not the
-  slope-dependent `factor`; GL_POLYGON_OFFSET_POINT isn't tracked.
+  slope-dependent `factor`; GL_POLYGON_OFFSET_POINT isn't tracked. Four
+  more from a review, each reproduced in WebGL2 against desktop GL and left
+  as gl-repl has them, with a TODO at each in PR08's second commit:
+  - The bias is applied to clip-space z, so it also moves the near and far
+    clip planes: a triangle on the near plane loses its outline under
+    glPolygonOffset(0, -32) (0 px vs 268). GL offsets depth after clipping,
+    and clamps it (GL 2.1 3.5.5). Only lines within the offset of a plane
+    are affected.
+  - The bias is in the projection matrix, so a program that writes
+    gl_Position without it (gl_Position = gl_Vertex) gets no offset.
+  - The depth bits are probed once, from the first framebuffer. On another
+    with a different depth size the offset is wrong by the difference: 256
+    times too small going from 24 to 16 bits (the outlines z-fight again),
+    256 times too large from 16 to 24 (hidden edges show through).
+  - The probe drains the driver's error flags first, so on Emscripten,
+    where it runs on the first glViewport, an error the application hadn't
+    read yet is lost (glDepthFunc(0), glViewport, glGetError gives
+    GL_NO_ERROR). gl-repl's drain is unbounded but has the same effect.
 - PR09 wide lines: emulated widths stop at 64 px, GL_LINE_SMOOTH isn't
   applied to the quads, and with a clip plane enabled wide lines are still
   one pixel wide on WebGL. Natively, gl4es's wide lines (drawn by the GLES

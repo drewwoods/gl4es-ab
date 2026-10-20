@@ -1,5 +1,5 @@
 # Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
 # A: 450c8ae5 PR07's tip (pr-07-polygon-lines), which PR08 builds on
-# B: c17daf5c "Offset polygon-mode lines with GL_POLYGON_OFFSET_LINE"
+# B: 3fa66062 "Add TODOs for polygon-offset-line gaps", after the offset commit
 REF_A=450c8ae55d04ee07674ff5f2514666b416e1c73e
-REF_B=c17daf5c5ba69e692067f12b1f5b874655f6e6ea
+REF_B=3fa660627cc3e6ce1e2074afcfb601bf08a0124e

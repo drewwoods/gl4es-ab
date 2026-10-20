@@ -82,11 +82,11 @@
 <body class="">
 <main>
   <h1>08 · Polygon offset for polygon-mode lines</h1>
-  <div class="refs">A = original, 450c8ae55d · B = patched, c17daf5c5b</div>
+  <div class="refs">A = original, 450c8ae55d · B = patched, 3fa660627c</div>
   <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/08-polygon-offset-line">demos/08-polygon-offset-line</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/08-polygon-offset-line/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/08-polygon-offset-line/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/08-polygon-offset-line/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
     <figure><figcaption>A · original <code>450c8ae55d</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
-    <figure><figcaption>B · patched <code>c17daf5c5b</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+    <figure><figcaption>B · patched <code>3fa660627c</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <section class="timing">
     <div class="head">
@@ -182,8 +182,9 @@ glGetFloatv(GL_POLYGON_OFFSET_UNITS, &amp;units);</code></pre></div>
 <p>B adds these commits:</p>
 <ol>
 <li><a href="https://github.com/drewwoods/gl4es/commit/c17daf5c5ba69e692067f12b1f5b874655f6e6ea"><code>c17daf5c5b</code></a> src/gl: Offset polygon-mode lines with GL_POLYGON_OFFSET_LINE</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/3fa660627cc3e6ce1e2074afcfb601bf08a0124e"><code>3fa660627c</code></a> src/gl: Add TODOs for polygon-offset-line gaps</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/450c8ae55d04...c17daf5c5ba6">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/450c8ae55d04...3fa660627cc3">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and

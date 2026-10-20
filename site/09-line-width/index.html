@@ -82,11 +82,11 @@
 <body class="">
 <main>
   <h1>09 · Wide lines on WebGL</h1>
-  <div class="refs">A = original, c17daf5c5b · B = patched, dc28e089ab</div>
+  <div class="refs">A = original, 3fa660627c · B = patched, 5f73205e39</div>
   <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/09-line-width">demos/09-line-width</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/09-line-width/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/09-line-width/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/09-line-width/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
-    <figure><figcaption>A · original <code>c17daf5c5b</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
-    <figure><figcaption>B · patched <code>dc28e089ab</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+    <figure><figcaption>A · original <code>3fa660627c</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
+    <figure><figcaption>B · patched <code>5f73205e39</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <section class="timing">
     <div class="head">
@@ -182,14 +182,14 @@ glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, range);</code></pre></div>
   </section>
   <section class="commits">
     <h2>What changes from A to B</h2>
-<p>A is <a href="https://github.com/drewwoods/gl4es/commit/c17daf5c5ba69e692067f12b1f5b874655f6e6ea"><code>c17daf5c5b</code></a> src/gl: Offset polygon-mode lines with GL_POLYGON_OFFSET_LINE</p>
+<p>A is <a href="https://github.com/drewwoods/gl4es/commit/3fa660627cc3e6ce1e2074afcfb601bf08a0124e"><code>3fa660627c</code></a> src/gl: Add TODOs for polygon-offset-line gaps</p>
 <p>B adds these commits:</p>
 <ol>
-<li><a href="https://github.com/drewwoods/gl4es/commit/3f292285aa96f40fac499410bdc002b8c2d5b174"><code>3f292285aa</code></a> src/gl: Draw lines wider than the driver allows as quads</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/8b72360126ea85575dd638c13a12c586849dafe3"><code>8b72360126</code></a> src/gl: Widen emulated wide lines along the minor axis, as GL does</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/dc28e089abfdc6407d572c52143928b7c1437ff4"><code>dc28e089ab</code></a> src/gl: Emulate wide lines only where the driver draws none</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/13f6dcbc116b3d2b76b2eb5a9550ad29453e42da"><code>13f6dcbc11</code></a> src/gl: Draw lines wider than the driver allows as quads</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/0101ee432553a417f74e5351d0fe72ff263b3343"><code>0101ee4325</code></a> src/gl: Widen emulated wide lines along the minor axis, as GL does</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/5f73205e398f8dc90e6af3ca287cfd5f39f352fe"><code>5f73205e39</code></a> src/gl: Emulate wide lines only where the driver draws none</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/c17daf5c5ba6...dc28e089abfd">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/3fa660627cc3...5f73205e398f">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and

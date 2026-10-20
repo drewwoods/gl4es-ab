@@ -9,11 +9,12 @@ doesn't apply to lines, so on gl4es the LINE enable raised
 `GL_INVALID_ENUM`, the outlines z-fought their faces, and
 `glPushAttrib(GL_POLYGON_BIT)` didn't save the offset.
 
-One commit: gl4es tracks the enable and the offset itself, restores them
+gl4es tracks the enable and the offset itself, restores them
 on `glPopAttrib`, and applies the offset's units to polygon-mode line draws
 by shifting the projection's depth row. It is gl-repl's patch with two
 changes: the offset values live in `glstate` rather than two globals, and a
-startup error-drain loop is bounded.
+startup error-drain loop is bounded. A second commit only adds TODOs for
+four gaps it leaves (see TODO.md).
 
 ## What the page shows
 
