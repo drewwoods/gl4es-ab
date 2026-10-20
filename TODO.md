@@ -68,6 +68,18 @@ eye-space position in highp`. It changes nothing in gl-repl's web catalog
   list already updates the current color, and now the tracked material too.
 - PR07 polygon-mode lines: triangle strips and fans still ignore edge flags,
   and glEdgeFlagPointer (edge flags in vertex arrays) is still a stub.
+  Three more from a review of the edge-flag commit, each reproduced in
+  Chrome against desktop GL, left as gl-repl has them:
+  - A display list with geometry but no glEdgeFlag records the flag current
+    at compile time (`listrl.c`), so glEdgeFlag before glCallList has no
+    effect: compiled under GL_FALSE, it stays invisible (0 px vs 268).
+  - GL_QUAD_STRIP edges are filtered by the current flag (`EDGE_EMIT` in
+    `listdraw.c`); GL ignores edge flags for strips, so after
+    glEdgeFlag(GL_FALSE) a strip disappears (0 px vs 444).
+  - glCallList sets GL_EDGE_FLAG to the list's last flag after it runs
+    (`gl4es.c`), overwriting a glPopAttrib(GL_CURRENT_BIT) restore inside
+    the list, which also hides edges in later draws. Flag changes should be
+    replayed in command order instead.
 - PR08 polygon offset for lines: only `units` is applied to lines, not the
   slope-dependent `factor`; GL_POLYGON_OFFSET_POINT isn't tracked.
 - PR09 wide lines: emulated widths stop at 64 px, GL_LINE_SMOOTH isn't
