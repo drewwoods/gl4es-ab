@@ -1,6 +1,6 @@
 # Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
 # A: a025615b upstream master
-# B: ffc123fe "Add TODOs for edge-flag gaps", the last of four
+# B: 450c8ae5 "Add TODOs for display-list edge-flag gaps", the last of five
 #    polygon-mode line commits
 REF_A=a025615bc79ac43ec911dced8fe5b8eb45a0b72d
-REF_B=ffc123febf190f79c47e22e1d303e2c0388f1f47
+REF_B=450c8ae55d04ee07674ff5f2514666b416e1c73e

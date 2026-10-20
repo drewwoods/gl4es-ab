@@ -27,10 +27,13 @@ void demo_draw(double t)
     glLoadIdentity();
 
     glColor3f(0.6f, 0.6f, 0.65f);
-    ab_label(8, 290, "ONE QUAD");
-    ab_label(8, 226, "QUAD STRIP");
-    ab_label(8, 162, "TRIANGLES");
-    ab_label(8, 98, "POLYGON");
+    ab_label(8, 329, "ONE QUAD");
+    ab_label(8, 289, "QUAD STRIP");
+    ab_label(8, 249, "TRIANGLES");
+    ab_label(8, 209, "POLYGON");
+    ab_label(8, 169, "FLAG OFF");
+    ab_label(8, 129, "LIST FLAG");
+    ab_label(8, 89, "LIST POP");
     ab_label(8, 34, "OBJECTS");
 
     /* test: ONE QUAD
@@ -38,10 +41,10 @@ void demo_draw(double t)
     glColor3f(0.4f, 0.8f, 1.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBegin(GL_QUADS);
-    glVertex2f(150.5f, 270.5f);
-    glVertex2f(250.5f, 270.5f);
-    glVertex2f(250.5f, 314.5f);
-    glVertex2f(150.5f, 314.5f);
+    glVertex2f(150.5f, 322.5f);
+    glVertex2f(250.5f, 322.5f);
+    glVertex2f(250.5f, 348.5f);
+    glVertex2f(150.5f, 348.5f);
     glEnd();
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     /* end test */
@@ -52,9 +55,9 @@ void demo_draw(double t)
     glColor3f(1.0f, 0.75f, 0.2f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBegin(GL_QUAD_STRIP);
-    glVertex2f(150.5f, 206.5f); glVertex2f(150.5f, 250.5f);
-    glVertex2f(250.5f, 206.5f); glVertex2f(250.5f, 250.5f);
-    glVertex2f(350.5f, 206.5f); glVertex2f(350.5f, 250.5f);
+    glVertex2f(150.5f, 282.5f); glVertex2f(150.5f, 308.5f);
+    glVertex2f(250.5f, 282.5f); glVertex2f(250.5f, 308.5f);
+    glVertex2f(350.5f, 282.5f); glVertex2f(350.5f, 308.5f);
     glEnd();
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     /* end test */
@@ -66,12 +69,12 @@ void demo_draw(double t)
     glColor3f(0.4f, 0.9f, 0.5f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBegin(GL_TRIANGLES);
-    glEdgeFlag(GL_TRUE);  glVertex2f(150.5f, 142.5f);
-    glEdgeFlag(GL_TRUE);  glVertex2f(250.5f, 142.5f);
-    glEdgeFlag(GL_FALSE); glVertex2f(250.5f, 186.5f);   /* hides 250,186 -> 150,142 */
-    glEdgeFlag(GL_FALSE); glVertex2f(150.5f, 142.5f);   /* hides 150,142 -> 250,186 */
-    glEdgeFlag(GL_TRUE);  glVertex2f(250.5f, 186.5f);
-    glEdgeFlag(GL_TRUE);  glVertex2f(150.5f, 186.5f);
+    glEdgeFlag(GL_TRUE);  glVertex2f(150.5f, 242.5f);
+    glEdgeFlag(GL_TRUE);  glVertex2f(250.5f, 242.5f);
+    glEdgeFlag(GL_FALSE); glVertex2f(250.5f, 268.5f);   /* hides 250,268 -> 150,242 */
+    glEdgeFlag(GL_FALSE); glVertex2f(150.5f, 242.5f);   /* hides 150,242 -> 250,268 */
+    glEdgeFlag(GL_TRUE);  glVertex2f(250.5f, 268.5f);
+    glEdgeFlag(GL_TRUE);  glVertex2f(150.5f, 268.5f);
     glEnd();
     glEdgeFlag(GL_TRUE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -83,14 +86,99 @@ void demo_draw(double t)
     glColor3f(0.9f, 0.5f, 0.9f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBegin(GL_POLYGON);
-    glVertex2f(160.5f, 78.5f);
-    glVertex2f(240.5f, 78.5f);
+    glVertex2f(160.5f, 202.5f);
+    glVertex2f(240.5f, 202.5f);
     glEdgeFlag(GL_FALSE);
-    glVertex2f(260.5f, 104.5f);                         /* hides 260,104 -> 200,122 */
+    glVertex2f(260.5f, 218.5f);                         /* hides 260,218 -> 200,228 */
     glEdgeFlag(GL_TRUE);
-    glVertex2f(200.5f, 122.5f);
-    glVertex2f(140.5f, 104.5f);
+    glVertex2f(200.5f, 228.5f);
+    glVertex2f(140.5f, 218.5f);
     glEnd();
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    /* end test */
+
+    /* test: FLAG OFF
+     * The quad strip again, with the edge flag off: GL ignores edge flags
+     * for strips, so two boxes. Before the quad-strip commit B drew nothing;
+     * master draws the diagonals. */
+    glColor3f(1.0f, 0.55f, 0.35f);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glEdgeFlag(GL_FALSE);
+    glBegin(GL_QUAD_STRIP);
+    glVertex2f(150.5f, 162.5f); glVertex2f(150.5f, 188.5f);
+    glVertex2f(250.5f, 162.5f); glVertex2f(250.5f, 188.5f);
+    glVertex2f(350.5f, 162.5f); glVertex2f(350.5f, 188.5f);
+    glEnd();
+    glEdgeFlag(GL_TRUE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    /* end test */
+
+    /* test: LIST FLAG
+     * Two display lists with a quad and no glEdgeFlag: the quad takes the
+     * flag current when the list is called, not when it was compiled. Left,
+     * compiled with the flag off and called with it on: four sides. Right,
+     * compiled on and called off: nothing. gl4es keeps the flag from compile
+     * time (a TODO), so B draws the right one only. Master draws both, with
+     * diagonals. */
+    static GLuint compiled_off, compiled_on;
+    if (!compiled_off) {
+        compiled_off = glGenLists(2);
+        compiled_on = compiled_off + 1;
+        glEdgeFlag(GL_FALSE);
+        glNewList(compiled_off, GL_COMPILE);
+        glBegin(GL_QUADS);
+        glVertex2f(150.5f, 122.5f); glVertex2f(230.5f, 122.5f);
+        glVertex2f(230.5f, 148.5f); glVertex2f(150.5f, 148.5f);
+        glEnd();
+        glEndList();
+        glEdgeFlag(GL_TRUE);
+        glNewList(compiled_on, GL_COMPILE);
+        glBegin(GL_QUADS);
+        glVertex2f(270.5f, 122.5f); glVertex2f(350.5f, 122.5f);
+        glVertex2f(350.5f, 148.5f); glVertex2f(270.5f, 148.5f);
+        glEnd();
+        glEndList();
+    }
+    glColor3f(0.95f, 0.85f, 0.4f);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glEdgeFlag(GL_TRUE);
+    glCallList(compiled_off);
+    glEdgeFlag(GL_FALSE);
+    glCallList(compiled_on);
+    glEdgeFlag(GL_TRUE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    /* end test */
+
+    /* test: LIST POP
+     * A display list that hides a quad's edges inside glPushAttrib and
+     * glPopAttrib: nothing on the left. After the list the flag is back to
+     * GL_TRUE, so the quad drawn next, on the right, has four sides, and
+     * glGetBooleanv(GL_EDGE_FLAG) is GL_TRUE (status line). gl4es keeps the
+     * list's last flag instead (a TODO), so B draws neither. Master draws
+     * both, with diagonals. */
+    static GLuint pop_list;
+    if (!pop_list) {
+        pop_list = glGenLists(1);
+        glNewList(pop_list, GL_COMPILE);
+        glPushAttrib(GL_CURRENT_BIT);
+        glEdgeFlag(GL_FALSE);
+        glBegin(GL_QUADS);
+        glVertex2f(150.5f, 82.5f); glVertex2f(230.5f, 82.5f);
+        glVertex2f(230.5f, 108.5f); glVertex2f(150.5f, 108.5f);
+        glEnd();
+        glPopAttrib();
+        glEndList();
+    }
+    glColor3f(0.5f, 0.85f, 0.95f);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glCallList(pop_list);
+    glBegin(GL_QUADS);
+    glVertex2f(270.5f, 82.5f); glVertex2f(350.5f, 82.5f);
+    glVertex2f(350.5f, 108.5f); glVertex2f(270.5f, 108.5f);
+    glEnd();
+    GLboolean after_pop = 2;
+    glGetBooleanv(GL_EDGE_FLAG, &after_pop);
+    glEdgeFlag(GL_TRUE);   /* so a wrong flag doesn't carry into the next frame */
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     /* end test */
 
@@ -126,8 +214,10 @@ void demo_draw(double t)
     /* end test */
 
     glColor3f(1, 1, 1);
-    ab_report("ONE QUAD and TRIANGLES: a box; QUAD STRIP: two boxes; POLYGON: four sides; "
-              "glGetBooleanv(GL_EDGE_FLAG): %s; %d objects",
+    ab_report("ONE QUAD and TRIANGLES: a box; QUAD STRIP and FLAG OFF: two boxes; "
+              "POLYGON: four sides; LIST FLAG: the left box; LIST POP: the right box; "
+              "glGetBooleanv(GL_EDGE_FLAG): %s, after LIST POP: %s; %d objects",
               edge == GL_FALSE ? "correct" : edge == 2 ? "left unwritten" : "wrong",
+              after_pop == GL_TRUE ? "correct" : after_pop == 2 ? "left unwritten" : "wrong",
               (int)objects);
 }

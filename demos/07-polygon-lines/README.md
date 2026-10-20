@@ -2,20 +2,22 @@
 
 ## The bugs
 
-Three commits, all about `glPolygonMode(GL_LINE)`, which draws each
-polygon's edges instead of filling it:
+Four commits, all about `glPolygonMode(GL_LINE)`, which draws each
+polygon's edges instead of filling it, and one with TODOs:
 
 | Commit | Before |
 |---|---|
 | Draw polygon-mode lines with glDrawArrays (Emscripten builds only) | gl4es generated an edge index array and called `glDrawElements`; on Emscripten every such draw uploads the indices and scans them in JavaScript, so wireframe scenes with many objects slowed down badly |
 | Outline quads and quad strips under polygon-mode lines | a quad drawn on its own, and every quad of a quad strip, also showed its diagonal, from the triangles gl4es draws it as |
 | Implement glEdgeFlag for polygon-mode lines | `glEdgeFlag` was a stub, so edges an application hides (the GLU tessellator does, for concave polygons) were drawn anyway, and `glGetBooleanv(GL_EDGE_FLAG)` raised `GL_INVALID_ENUM` |
+| Draw every quad-strip edge whatever the edge flag | new with the commit above: after `glEdgeFlag(GL_FALSE)` a quad strip lost all its edges, though GL applies edge flags only to separate triangles, separate quads and polygons |
+| Add TODOs for display-list edge-flag gaps | comments only, for two bugs left as gl-repl has them (rows LIST FLAG and LIST POP) |
 
-All three are gl-repl's patches, with two changes: the glDrawArrays
+The first three are gl-repl's patches, with two changes: the glDrawArrays
 expansion applies to Emscripten builds only, since natively it only adds
 copying (6-17% slower on this demo), and the edge-flag patch drops two
-test-only hooks gl-repl's own bench used. A fourth commit only adds
-TODOs for three edge-flag gaps gl-repl's patch leaves (see TODO.md).
+test-only hooks gl-repl's own bench used. The quad-strip commit is new to
+gl-repl.
 
 ## What the page shows
 
@@ -29,6 +31,19 @@ Each row's OpenGL is listed on the page under the frames. In short:
   the diagonal.
 - **POLYGON**: a `GL_POLYGON` pentagon with its top-right side hidden by an
   edge flag. Four sides; A draws all five.
+- **FLAG OFF**: the quad strip again, after `glEdgeFlag(GL_FALSE)`. Two
+  boxes; A adds the diagonals, and before the quad-strip commit B drew
+  nothing.
+- **LIST FLAG**: two display lists of one quad each, with no `glEdgeFlag`
+  in them. The quad should take the flag current at `glCallList`: the left
+  list, compiled with the flag off and called with it on, draws four sides;
+  the right one, compiled on and called off, draws nothing. B keeps the
+  flag from compile time (a TODO), so it draws the right one only.
+- **LIST POP**: a display list that hides a quad's edges between
+  `glPushAttrib(GL_CURRENT_BIT)` and `glPopAttrib`, then a quad drawn after
+  it. Only the second should show, and `glGetBooleanv(GL_EDGE_FLAG)` after
+  the list should be `GL_TRUE`. B sets the list's last flag after it runs
+  (a TODO), so it draws neither and the status line says "wrong".
 - **GL_EDGE_FLAG**: `glGetBooleanv(GL_EDGE_FLAG)` after `glEdgeFlag(GL_FALSE)`.
   The status line says "correct" on B, "left unwritten" on A.
 - **OBJECTS**: many small wireframe grids, each placed with its own
@@ -37,10 +52,16 @@ Each row's OpenGL is listed on the page under the frames. In short:
 
 The **Native desktop GL** section shows the same demo on desktop OpenGL;
 hover one to mark where B differs from it. In Chrome, B matches Apple's
-and Mesa radeonsi's frames exactly (0 px) and differs from NVIDIA's by 12
-px and Mesa iris's by 66, of line rasterization; A differs from each by
-about 2,450 px. Natively, gl4es with these commits matches each machine's
-desktop GL to the pixel (NVIDIA, radeonsi, iris and llvmpipe).
+frame exactly except for the two TODO rows (LIST FLAG 424 px, LIST POP
+212); A differs from it by 3,357 px.
+
+Mesa doesn't follow GL on the FLAG OFF row: its desktop GL (iris, and
+llvmpipe) drops the quad strip's edges after `glEdgeFlag(GL_FALSE)` too,
+while the GL reference page says "connected quadrilaterals are always
+marked as boundary". Apple's GL draws them. So against Mesa iris, B differs
+by 477 px there, besides the TODO rows and 64 px of line rasterization
+elsewhere. Natively on iris, gl4es with these commits matches Mesa's desktop
+GL to the pixel on every row but those three.
 
 ## The frame time
 

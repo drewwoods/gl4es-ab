@@ -21,7 +21,7 @@ merge and drop the patches it carries.
 | color-material-face | #521, merged | |
 | point-smooth, point-size-batch | #522, merged | same code, plus a comment commit (TODOs) and the highp fix below, both new to gl-repl |
 | accum-fbo, accum-deferred-return, accum-deferred-scissor | not yet | needs braces for gcc-14 -Wdangling-else in accum_probe's SHUT_LOGD |
-| polygon-line-drawarrays, polygon-line-quad-edges, edge-flag | PR07 (`pr-07-polygon-lines`), open | **diverges**: a fourth commit adds TODO comments only (edge-flag gaps, under Known gaps); drawarrays expansion is Emscripten-only and no longer zeroes a renderlist_t per draw (both invisible to gl-repl, which is web-only); edge-flag drops the `gl4es_edgeflag_test_*` hooks, so gl-repl's `packaging/web/bench/gl4es_edge_flag.c` needs another way to check the edge-flag allocation when it fast-forwards: only `test_fill_prebegin_capacity` uses the hooks; plan is to drop its capacity assertion and keep the coverage check (user decides at the fast-forward). gl-repl A/B with its remaining stack on PR07: 0 of 43 catalog examples differ, no oracle regressions |
+| polygon-line-drawarrays, polygon-line-quad-edges, edge-flag | PR07 (`pr-07-polygon-lines`), open | **diverges**: a new fourth commit draws every quad-strip edge whatever the edge flag, as GL does (gl-repl A/B pending), and a fifth adds TODO comments only (edge-flag gaps, under Known gaps); drawarrays expansion is Emscripten-only and no longer zeroes a renderlist_t per draw (both invisible to gl-repl, which is web-only); edge-flag drops the `gl4es_edgeflag_test_*` hooks, so gl-repl's `packaging/web/bench/gl4es_edge_flag.c` needs another way to check the edge-flag allocation when it fast-forwards: only `test_fill_prebegin_capacity` uses the hooks; plan is to drop its capacity assertion and keep the coverage check (user decides at the fast-forward). gl-repl A/B with its remaining stack on PR07: 0 of 43 catalog examples differ, no oracle regressions |
 | polygon-offset-line | PR08 (`pr-08-polygon-offset-line`, on PR07), open | **diverges**: factor/units live in `glstate` instead of the `gl4es_mirror_polygon_offset_*` globals, the startup glGetError drain is bounded (16 tries), and its glLineWidth hunk and `gl4es_mvp_load_identity()` moved to PR09 (combined code after PR09 is unchanged); none of it is visible to gl-repl. gl-repl A/B (with PR09): 0 of 43 catalog examples differ from gl-repl's patch |
 | line-width-quads | PR09 (`pr-09-line-width`, on PR08), open | gl-repl's code as its first commit (plus PR08's moved glLineWidth hunk), then **two new commits**: wide lines widened along the minor axis as GL specifies (visible in gl-repl: diagonal wide lines get thinner, ends axis-aligned), and quads used only where the driver's largest width is 1 (invisible on the web). gl-repl A/B on 2026-10-15 (B = PR09 tip plus the accum patches): no oracle regressions, render bench unchanged; commit 1 alone is pixel-identical to gl-repl's patch (0 of 43); the tip changes 27 of 43 examples, all from commit 2: diagonal wide lines thinner by about cos(angle) (0.83 measured against 0.87 expected on the logo's 30° outline), horizontal and vertical lines unchanged. Example 3's red X axis is coplanar with the disc, so its depth tie flips; neither is more correct. Port note from PR07 still applies: it didn't apply on top of PR07: its `} /* !wide_drew */` closing brace in listdraw.c must now go just before PR07's `if (use_line_arrays && line_arrays == &transient_line_arrays)` guard around `clear_line_arrays()`, so the clear stays outside the wide-line block; regenerate gl-repl's patch with that when it moves past PR07 |
 
@@ -66,21 +66,24 @@ eye-space position in highp`. It changes nothing in gl-repl's web catalog
   on a GLES1 backend clip-plane equations aren't restored.
 - #521 color material: glColor inside glBegin/glEnd while compiling a display
   list already updates the current color, and now the tracked material too.
-- PR07 polygon-mode lines: triangle strips and fans still ignore edge flags,
-  and glEdgeFlagPointer (edge flags in vertex arrays) is still a stub.
-  Three more from a review of the edge-flag commit, each reproduced in
-  Chrome against desktop GL, left as gl-repl has them, with a TODO at
-  each in PR07's last commit:
+- PR07 polygon-mode lines: a batch that mixes separate triangles or quads
+  with a triangle strip or fan loses all its edge flags (it falls back to
+  the edge list without them), and glEdgeFlagPointer (edge flags in vertex arrays) is still a stub.
+  Two more from a review of the edge-flag commit, each reproduced in
+  Chrome against desktop GL and shown in demo 07 (rows LIST FLAG and LIST
+  POP), left as gl-repl has them, with a TODO at each in PR07's last
+  commit:
   - A display list with geometry but no glEdgeFlag records the flag current
     at compile time (`listrl.c`), so glEdgeFlag before glCallList has no
-    effect: compiled under GL_FALSE, it stays invisible (0 px vs 268).
-  - GL_QUAD_STRIP edges are filtered by the current flag (`EDGE_EMIT` in
-    `listdraw.c`); GL ignores edge flags for strips, so after
-    glEdgeFlag(GL_FALSE) a strip disappears (0 px vs 444).
+    effect: compiled under GL_FALSE, it stays invisible, and compiled under
+    GL_TRUE it can't be hidden.
   - glCallList sets GL_EDGE_FLAG to the list's last flag after it runs
     (`gl4es.c`), overwriting a glPopAttrib(GL_CURRENT_BIT) restore inside
     the list, which also hides edges in later draws. Flag changes should be
     replayed in command order instead.
+  A third, quad strips hiding their edges under glEdgeFlag(GL_FALSE), is
+  fixed in PR07 (new to gl-repl). Mesa's desktop GL (iris, llvmpipe) has
+  the same bug; Apple's doesn't.
 - PR08 polygon offset for lines: only `units` is applied to lines, not the
   slope-dependent `factor`; GL_POLYGON_OFFSET_POINT isn't tracked.
 - PR09 wide lines: emulated widths stop at 64 px, GL_LINE_SMOOTH isn't

@@ -82,11 +82,11 @@
 <body class="">
 <main>
   <h1>07 · Polygon-mode lines and edge flags</h1>
-  <div class="refs">A = original, a025615bc7 · B = patched, ffc123febf</div>
+  <div class="refs">A = original, a025615bc7 · B = patched, 450c8ae55d</div>
   <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/07-polygon-lines">demos/07-polygon-lines</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/07-polygon-lines/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/07-polygon-lines/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/07-polygon-lines/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
     <figure><figcaption>A · original <code>a025615bc7</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
-    <figure><figcaption>B · patched <code>ffc123febf</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+    <figure><figcaption>B · patched <code>450c8ae55d</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <section class="timing">
     <div class="head">
@@ -119,43 +119,104 @@
       <div class="test"><h3>ONE QUAD</h3><p>One quad on its own: its four sides. Master also draws the diagonal.</p><pre><code>glColor3f(0.4f, 0.8f, 1.0f);
 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 glBegin(GL_QUADS);
-glVertex2f(150.5f, 270.5f);
-glVertex2f(250.5f, 270.5f);
-glVertex2f(250.5f, 314.5f);
-glVertex2f(150.5f, 314.5f);
+glVertex2f(150.5f, 322.5f);
+glVertex2f(250.5f, 322.5f);
+glVertex2f(250.5f, 348.5f);
+glVertex2f(150.5f, 348.5f);
 glEnd();
 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);</code></pre></div>
       <div class="test"><h3>QUAD STRIP</h3><p>Two quads in a strip: two boxes side by side, no diagonals. Master draws each quad's diagonal.</p><pre><code>glColor3f(1.0f, 0.75f, 0.2f);
 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 glBegin(GL_QUAD_STRIP);
-glVertex2f(150.5f, 206.5f); glVertex2f(150.5f, 250.5f);
-glVertex2f(250.5f, 206.5f); glVertex2f(250.5f, 250.5f);
-glVertex2f(350.5f, 206.5f); glVertex2f(350.5f, 250.5f);
+glVertex2f(150.5f, 282.5f); glVertex2f(150.5f, 308.5f);
+glVertex2f(250.5f, 282.5f); glVertex2f(250.5f, 308.5f);
+glVertex2f(350.5f, 282.5f); glVertex2f(350.5f, 308.5f);
 glEnd();
 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);</code></pre></div>
       <div class="test"><h3>TRIANGLES</h3><p>A square from two triangles, with edge flags hiding the shared diagonal: an edge is drawn when the flag of the vertex it starts at is GL_TRUE. Just the square's four sides. Master draws the diagonal.</p><pre><code>glColor3f(0.4f, 0.9f, 0.5f);
 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 glBegin(GL_TRIANGLES);
-glEdgeFlag(GL_TRUE);  glVertex2f(150.5f, 142.5f);
-glEdgeFlag(GL_TRUE);  glVertex2f(250.5f, 142.5f);
-glEdgeFlag(GL_FALSE); glVertex2f(250.5f, 186.5f);   /* hides 250,186 -&gt; 150,142 */
-glEdgeFlag(GL_FALSE); glVertex2f(150.5f, 142.5f);   /* hides 150,142 -&gt; 250,186 */
-glEdgeFlag(GL_TRUE);  glVertex2f(250.5f, 186.5f);
-glEdgeFlag(GL_TRUE);  glVertex2f(150.5f, 186.5f);
+glEdgeFlag(GL_TRUE);  glVertex2f(150.5f, 242.5f);
+glEdgeFlag(GL_TRUE);  glVertex2f(250.5f, 242.5f);
+glEdgeFlag(GL_FALSE); glVertex2f(250.5f, 268.5f);   /* hides 250,268 -&gt; 150,242 */
+glEdgeFlag(GL_FALSE); glVertex2f(150.5f, 242.5f);   /* hides 150,242 -&gt; 250,268 */
+glEdgeFlag(GL_TRUE);  glVertex2f(250.5f, 268.5f);
+glEdgeFlag(GL_TRUE);  glVertex2f(150.5f, 268.5f);
 glEnd();
 glEdgeFlag(GL_TRUE);
 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);</code></pre></div>
       <div class="test"><h3>POLYGON</h3><p>A pentagon with its top-right side hidden by an edge flag: four sides. Master draws all five.</p><pre><code>glColor3f(0.9f, 0.5f, 0.9f);
 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 glBegin(GL_POLYGON);
-glVertex2f(160.5f, 78.5f);
-glVertex2f(240.5f, 78.5f);
+glVertex2f(160.5f, 202.5f);
+glVertex2f(240.5f, 202.5f);
 glEdgeFlag(GL_FALSE);
-glVertex2f(260.5f, 104.5f);                         /* hides 260,104 -&gt; 200,122 */
+glVertex2f(260.5f, 218.5f);                         /* hides 260,218 -&gt; 200,228 */
 glEdgeFlag(GL_TRUE);
-glVertex2f(200.5f, 122.5f);
-glVertex2f(140.5f, 104.5f);
+glVertex2f(200.5f, 228.5f);
+glVertex2f(140.5f, 218.5f);
 glEnd();
+glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);</code></pre></div>
+      <div class="test"><h3>FLAG OFF</h3><p>The quad strip again, with the edge flag off: GL ignores edge flags for strips, so two boxes. Before the quad-strip commit B drew nothing; master draws the diagonals.</p><pre><code>glColor3f(1.0f, 0.55f, 0.35f);
+glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+glEdgeFlag(GL_FALSE);
+glBegin(GL_QUAD_STRIP);
+glVertex2f(150.5f, 162.5f); glVertex2f(150.5f, 188.5f);
+glVertex2f(250.5f, 162.5f); glVertex2f(250.5f, 188.5f);
+glVertex2f(350.5f, 162.5f); glVertex2f(350.5f, 188.5f);
+glEnd();
+glEdgeFlag(GL_TRUE);
+glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);</code></pre></div>
+      <div class="test"><h3>LIST FLAG</h3><p>Two display lists with a quad and no glEdgeFlag: the quad takes the flag current when the list is called, not when it was compiled. Left, compiled with the flag off and called with it on: four sides. Right, compiled on and called off: nothing. gl4es keeps the flag from compile time (a TODO), so B draws the right one only. Master draws both, with diagonals.</p><pre><code>static GLuint compiled_off, compiled_on;
+if (!compiled_off) {
+    compiled_off = glGenLists(2);
+    compiled_on = compiled_off + 1;
+    glEdgeFlag(GL_FALSE);
+    glNewList(compiled_off, GL_COMPILE);
+    glBegin(GL_QUADS);
+    glVertex2f(150.5f, 122.5f); glVertex2f(230.5f, 122.5f);
+    glVertex2f(230.5f, 148.5f); glVertex2f(150.5f, 148.5f);
+    glEnd();
+    glEndList();
+    glEdgeFlag(GL_TRUE);
+    glNewList(compiled_on, GL_COMPILE);
+    glBegin(GL_QUADS);
+    glVertex2f(270.5f, 122.5f); glVertex2f(350.5f, 122.5f);
+    glVertex2f(350.5f, 148.5f); glVertex2f(270.5f, 148.5f);
+    glEnd();
+    glEndList();
+}
+glColor3f(0.95f, 0.85f, 0.4f);
+glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+glEdgeFlag(GL_TRUE);
+glCallList(compiled_off);
+glEdgeFlag(GL_FALSE);
+glCallList(compiled_on);
+glEdgeFlag(GL_TRUE);
+glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);</code></pre></div>
+      <div class="test"><h3>LIST POP</h3><p>A display list that hides a quad's edges inside glPushAttrib and glPopAttrib: nothing on the left. After the list the flag is back to GL_TRUE, so the quad drawn next, on the right, has four sides, and glGetBooleanv(GL_EDGE_FLAG) is GL_TRUE (status line). gl4es keeps the list's last flag instead (a TODO), so B draws neither. Master draws both, with diagonals.</p><pre><code>static GLuint pop_list;
+if (!pop_list) {
+    pop_list = glGenLists(1);
+    glNewList(pop_list, GL_COMPILE);
+    glPushAttrib(GL_CURRENT_BIT);
+    glEdgeFlag(GL_FALSE);
+    glBegin(GL_QUADS);
+    glVertex2f(150.5f, 82.5f); glVertex2f(230.5f, 82.5f);
+    glVertex2f(230.5f, 108.5f); glVertex2f(150.5f, 108.5f);
+    glEnd();
+    glPopAttrib();
+    glEndList();
+}
+glColor3f(0.5f, 0.85f, 0.95f);
+glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+glCallList(pop_list);
+glBegin(GL_QUADS);
+glVertex2f(270.5f, 82.5f); glVertex2f(350.5f, 82.5f);
+glVertex2f(350.5f, 108.5f); glVertex2f(270.5f, 108.5f);
+glEnd();
+GLboolean after_pop = 2;
+glGetBooleanv(GL_EDGE_FLAG, &amp;after_pop);
+glEdgeFlag(GL_TRUE);   /* so a wrong flag doesn't carry into the next frame */
 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);</code></pre></div>
       <div class="test"><h3>GL_EDGE_FLAG</h3><p>glGetBooleanv(GL_EDGE_FLAG) returns the flag just set; the status line shows it. Master leaves it unwritten.</p><pre><code>GLboolean edge = 2;
 glEdgeFlag(GL_FALSE);
@@ -197,9 +258,10 @@ glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);</code></pre></div>
 <li><a href="https://github.com/drewwoods/gl4es/commit/bed9777d184eee51700cc2ec3cdd0a475f4153cd"><code>bed9777d18</code></a> src/gl: Draw polygon-mode lines with glDrawArrays</li>
 <li><a href="https://github.com/drewwoods/gl4es/commit/8af56a8b431045435784f2e3f37481ea657bb803"><code>8af56a8b43</code></a> src/gl: Outline quads and quad strips under polygon-mode lines</li>
 <li><a href="https://github.com/drewwoods/gl4es/commit/73ed9b1f2599cac6ced0f044cd09703dbc79bd40"><code>73ed9b1f25</code></a> src/gl: Implement glEdgeFlag for polygon-mode lines</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/ffc123febf190f79c47e22e1d303e2c0388f1f47"><code>ffc123febf</code></a> src/gl: Add TODOs for edge-flag gaps</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/2e27fcc3d9afb7d785d238083566d1b6478f756a"><code>2e27fcc3d9</code></a> src/gl: Draw every quad-strip edge whatever the edge flag</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/450c8ae55d04ee07674ff5f2514666b416e1c73e"><code>450c8ae55d</code></a> src/gl: Add TODOs for display-list edge-flag gaps</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/a025615bc79a...ffc123febf19">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/a025615bc79a...450c8ae55d04">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and
