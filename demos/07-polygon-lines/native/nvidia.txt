@@ -1,1 +1,1 @@
-NVIDIA GeForce RTX 5050/PCIe/SSE2, 4.6.0 NVIDIA 615.71.09, at t = 1 s
+Quadro K1200/PCIe/SSE2, 4.6.0 NVIDIA 580.173.02, at t = 1 s

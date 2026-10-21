@@ -51,17 +51,21 @@ Each row's OpenGL is listed on the page under the frames. In short:
   The `objects` slider sets how many.
 
 The **Native desktop GL** section shows the same demo on desktop OpenGL;
-hover one to mark where B differs from it. In Chrome, B matches Apple's
-frame exactly except for the two TODO rows (LIST FLAG 424 px, LIST POP
-212); A differs from it by 3,357 px.
+hover one to mark where B differs from it. In Chrome, off the two TODO rows
+(LIST FLAG 424 px, LIST POP 212), B matches Apple's and Mesa radeonsi's frames
+exactly and differs from NVIDIA's by 20 px and Mesa iris's by 64, of line
+rasterization, except for FLAG OFF on Mesa; A differs from each by 3,357 to
+3,898 px.
 
-Mesa doesn't follow GL on the FLAG OFF row: its desktop GL (iris, and
-llvmpipe) drops the quad strip's edges after `glEdgeFlag(GL_FALSE)` too,
-while the GL reference page says "connected quadrilaterals are always
-marked as boundary". Apple's GL draws them. So against Mesa iris, B differs
-by 477 px there, besides the TODO rows and 64 px of line rasterization
-elsewhere. Natively on iris, gl4es with these commits matches Mesa's desktop
-GL to the pixel on every row but those three.
+Mesa doesn't follow GL on the FLAG OFF row: its desktop GL (radeonsi, iris
+and llvmpipe) drops the quad strip's edges after `glEdgeFlag(GL_FALSE)` too,
+while the GL reference page says "connected quadrilaterals are always marked
+as boundary". Apple's and NVIDIA's GL draw them, and so does B; against Mesa
+B differs by 477 px there.
+
+Natively, gl4es with these commits matches each machine's desktop GL to the
+pixel (NVIDIA, radeonsi, iris and llvmpipe), apart from the two TODO rows
+and, on Mesa, FLAG OFF.
 
 ## The frame time
 

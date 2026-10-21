@@ -82,8 +82,9 @@ eye-space position in highp`. It changes nothing in gl-repl's web catalog
     the list, which also hides edges in later draws. Flag changes should be
     replayed in command order instead.
   A third, quad strips hiding their edges under glEdgeFlag(GL_FALSE), is
-  fixed in PR07 (new to gl-repl). Mesa's desktop GL (iris, llvmpipe) has
-  the same bug; Apple's doesn't.
+  fixed in PR07 (new to gl-repl). Mesa's desktop GL (radeonsi, iris,
+  llvmpipe) has the same bug; Apple's and NVIDIA's (Quadro K1200, 580.173)
+  don't.
 - PR08 polygon offset for lines: only `units` is applied to lines, not the
   slope-dependent `factor`; GL_POLYGON_OFFSET_POINT isn't tracked. Four
   more from a review, each reproduced in WebGL2 against desktop GL and left
