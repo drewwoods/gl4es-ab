@@ -40,8 +40,8 @@ In the OFFSET LINE row, B matches all four references in Chrome (Apple,
 NVIDIA and Mesa radeonsi 0 px, Mesa iris 1); A differs by about 740 px.
 Natively, B matches NVIDIA's desktop GL to the pixel. The two rows
 without an offset z-fight, and that pattern differs between
-implementations (39 to 287 px), so the whole-frame counts on hover include
-it.
+implementations (39 to 477 px per row in Chrome), so the whole-frame
+counts on hover include it.
 
 ## The frame time
 
