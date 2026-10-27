@@ -20,7 +20,8 @@ merge and drop the patches it carries.
 | pushattrib-gaps, pushattrib-texenv | #520, merged | split into five commits, same code |
 | color-material-face | #521, merged | |
 | point-smooth, point-size-batch | #522, merged | same code, plus a comment commit (TODOs) and the highp fix below, both new to gl-repl |
-| accum-fbo, accum-deferred-return, accum-deferred-scissor | not yet | needs braces for gcc-14 -Wdangling-else in accum_probe's SHUT_LOGD |
+| accum-fbo | PR10 (`pr-10-accum`), prepared | **diverges**: drops the stray `names.txt` the patch adds, braces the probe's SHUT_LOGD if/else (gcc 14 -Wdangling-else: the else bound to SHUT_LOGD's inner if), then three new commits: `glClearAccum` clamps to [-1, 1] and `glGetIntegerv(GL_ACCUM_CLEAR_VALUE)` maps [-1, 1] onto [-INT_MAX, INT_MAX]; the RGBA16F probe no longer samples the texture it draws into (WebGL rejects the feedback loop, so in Chrome the buffer was always RGBA8 and `GL_ACCUM_RED_BITS` read 8; visible to gl-repl only where its deferred path falls back to the FBO); TODO comments (under Known gaps). Demo 10 with B1 (PR10 plus gl-repl's other four patches) is pixel-identical to PR10 alone. gl-repl A/B requested 2026-10-27: B1 = e3acd7c6, B2 = c779d056 (PR10 without the deferred patches) |
+| accum-deferred-return, accum-deferred-scissor | not yet | performance only; follow-up PRs after PR10. deferred-return conflicts with PR10 at the probe: its `realize_accumenv(a, a->program, a->uscale, 0.f)` goes after PR10's `gles_glBindTexture(GL_TEXTURE_2D, 0)` (resolved in cc25f3d0); scissor and the other patches apply cleanly. gl-repl measured +9.05% and +4.08% FPS (2026-08-24), but that baseline's FBO was RGBA8 in Chrome (the probe bug above) |
 | polygon-line-drawarrays, polygon-line-quad-edges, edge-flag | #524, merged | **diverges**: a new fourth commit draws every quad-strip edge whatever the edge flag, as GL does (gl-repl A/B on 2026-10-20: 0 of 43 differ, no oracle regressions; a latent fix there, since gl-repl installs glEdgeFlag as the GLU tessellator's edge-flag callback and never resets it, so a quad strip drawn under vertex outlines or hidden-line mode after a tessellation would lose its edges), and a fifth adds TODO comments only (edge-flag gaps, under Known gaps); drawarrays expansion is Emscripten-only and no longer zeroes a renderlist_t per draw (both invisible to gl-repl, which is web-only); edge-flag drops the `gl4es_edgeflag_test_*` hooks, so gl-repl's `packaging/web/bench/gl4es_edge_flag.c` needs another way to check the edge-flag allocation when it fast-forwards: only `test_fill_prebegin_capacity` uses the hooks; plan is to drop its capacity assertion and keep the coverage check (user decides at the fast-forward). gl-repl A/B with its remaining stack on PR07: 0 of 43 catalog examples differ, no oracle regressions |
 | polygon-offset-line | PR08 (`pr-08-polygon-offset-line`), next | **diverges**: a second commit adds TODO comments only (four gaps, under Known gaps); factor/units live in `glstate` instead of the `gl4es_mirror_polygon_offset_*` globals, the startup glGetError drain is bounded (16 tries), and its glLineWidth hunk and `gl4es_mvp_load_identity()` moved to PR09 (combined code after PR09 is unchanged); none of it is visible to gl-repl. gl-repl A/B (with PR09): 0 of 43 catalog examples differ from gl-repl's patch |
 | line-width-quads | PR09 (`pr-09-line-width`, on PR08), open | gl-repl's code as its first commit (plus PR08's moved glLineWidth hunk), then **two new commits**: wide lines widened along the minor axis as GL specifies (visible in gl-repl: diagonal wide lines get thinner, ends axis-aligned), and quads used only where the driver's largest width is 1 (invisible on the web). gl-repl A/B on 2026-10-15 (B = PR09 tip plus the accum patches): no oracle regressions, render bench unchanged; commit 1 alone is pixel-identical to gl-repl's patch (0 of 43); the tip changes 27 of 43 examples, all from commit 2: diagonal wide lines thinner by about cos(angle) (0.83 measured against 0.87 expected on the logo's 30° outline), horizontal and vertical lines unchanged. Example 3's red X axis is coplanar with the disc, so its depth tie flips; neither is more correct. Port note from PR07 still applies: it didn't apply on top of PR07: its `} /* !wide_drew */` closing brace in listdraw.c must now go just before PR07's `if (use_line_arrays && line_arrays == &transient_line_arrays)` guard around `clear_line_arrays()`, so the clear stays outside the wide-line block; regenerate gl-repl's patch with that when it moves past PR07 |
@@ -104,6 +105,15 @@ eye-space position in highp`. It changes nothing in gl-repl's web catalog
     where it runs on the first glViewport, an error the application hadn't
     read yet is lost (glDepthFunc(0), glViewport, glGetError gives
     GL_NO_ERROR). gl-repl's drain is unbounded but has the same effect.
+- PR10 accumulation buffer (TODOs in the code, in its last commit):
+  GL_ADD and GL_MULT do nothing (demo 10's TRAIL panel); glAccum and
+  glClearAccum aren't recorded in display lists, and while a list is
+  compiled glAccum draws at once with its own state calls recorded into the
+  list; the framebuffer copy is RGB, so a read buffer's alpha is lost; GLES
+  3 refuses to copy from a multisampled read framebuffer, so natively a
+  multisampled window gets nothing from GL_ACCUM and GL_LOAD (WebGL
+  resolves it); the color mask applies when the accumulation buffer is
+  cleared, though GL doesn't mask it.
 - PR09 wide lines: emulated widths stop at 64 px, GL_LINE_SMOOTH isn't
   applied to the quads, and with a clip plane enabled wide lines are still
   one pixel wide on WebGL. Natively, gl4es's wide lines (drawn by the GLES
@@ -120,8 +130,6 @@ eye-space position in highp`. It changes nothing in gl-repl's web catalog
   units on drivers that run mediump as fp16 (NVIDIA, radeonsi, mobile GPUs).
   Making the whole vertex shader highp needs care: uniforms shared with the
   fragment shader must keep matching precision.
-- **GL_ACCUM_CLEAR_VALUE** from glGetIntegerv casts to GLint instead of
-  mapping [0, 1] to [0, INT_MAX] like the other clear values (accum PR).
 
 ## gl4es-ab harness
 
@@ -129,3 +137,10 @@ eye-space position in highp`. It changes nothing in gl-repl's web catalog
   while the reference converted to PNG.
 - gl4es A/B natively on macOS would need a GLES2 driver: ANGLE's libEGL and
   libGLESv2 over Metal. Only the desktop-GL reference runs there now.
+- An NVIDIA reference for demo 10 needs a GLX context with an accumulation
+  buffer (EGL configs have none) and an X display on zen3 or pentiumd. Mesa
+  can't give one: none of iris's 992 GLX configs has an accumulation buffer.
+- Each A/B page times both sides on load, pausing one at a time for about
+  20 s. A paused side keeps its last frame, so freezing or hovering a
+  native reference in that time compares a stale frame of an animated
+  demo. Static demos (01-09) don't show it.
