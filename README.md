@@ -12,6 +12,8 @@ harness/           shared host code
   web.c              WebGL2 context + gl4es, as gl-repl ships it
   native.c           headless Mesa (EGL surfaceless + pbuffer): GLES2 under
                      gl4es, or desktop GL with -DAB_DESKTOP_GL as a reference
+  mac_window.m       macOS reference in an off-screen window, for demos that
+                     need an accumulation buffer (ACCUM=1 in their refs)
   shell.html         one side's page
   ab.html            the side-by-side A/B page
 demos/NN-<patch>/  main.c + README.md (the bug, what to look for, expected result)
@@ -69,7 +71,9 @@ clean.
 
 The native build writes `out/native/<demo>/{ref,a,b}.png`, rendered at `AB_FRAME_T`
 (default t = 1). `ref` is Mesa desktop GL with no gl4es: what the spec
-expects.
+expects. On macOS only `ref` is built, from Apple's OpenGL; a demo whose
+`refs` has `ACCUM=1` draws it into an off-screen window, which (unlike a
+framebuffer object) has an accumulation buffer. Mesa has none to offer.
 
 ## How the hosts drive gl4es
 

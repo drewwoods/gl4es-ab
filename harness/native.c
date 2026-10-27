@@ -45,12 +45,18 @@ static void die(const char *what)
     exit(1);
 }
 
+void ab_mac_window_context(void); /* mac_window.m */
+
 static void make_context(int win_x)
 {
     if (win_x >= 0) {
         fprintf(stderr, "--window isn't supported on macOS\n");
         exit(1);
     }
+#ifdef AB_ACCUM
+    ab_mac_window_context();
+    return;
+#endif
     CGLPixelFormatAttribute attr[] = {
         kCGLPFAOpenGLProfile, (CGLPixelFormatAttribute)kCGLOGLPVersion_Legacy,
         kCGLPFAAccelerated, kCGLPFAColorSize, 24, kCGLPFAAlphaSize, 8,

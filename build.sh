@@ -320,10 +320,14 @@ to_png() {
 # gl4es has no GLES driver to draw on there.
 build_native_mac() {
     local out=$here/out/native/$demo frame=${AB_FRAME_T:-}
+    # ACCUM=1 in the refs file: the demo needs an accumulation buffer, which
+    # only a window has; draw into an off-screen one.
+    local accum=()
+    [ "$(default_ref ACCUM)" = 1 ] && accum=(-DAB_ACCUM "$here/harness/mac_window.m" -framework Cocoa)
     mkdir -p "$out"
     ${CC:-cc} -O2 -Wall -I"$here/harness" "$here/harness/native.c" "$here/harness/common.c" \
         "$demo_dir/main.c" -DAB_SIDE="\"ref\"" -DAB_REF="\"apple\"" -DAB_SHA="\"-\"" \
-        -DAB_DESKTOP_GL -DGL_SILENCE_DEPRECATION -framework OpenGL -lm -o "$out/ref"
+        -DAB_DESKTOP_GL -DGL_SILENCE_DEPRECATION ${accum[@]+"${accum[@]}"} -framework OpenGL -lm -o "$out/ref"
     [ -n "${AB_BUILD_ONLY:-}" ] && { echo "native: $out/ref"; return; }
     (cd "$out" && ./ref --screenshot ref.ppm ${frame:+--t "$frame"} >ref.txt) || return 1
     grep -v '^renderer: ' "$out/ref.txt"
