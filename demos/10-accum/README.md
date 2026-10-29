@@ -64,7 +64,8 @@ never do. An NVIDIA reference needs a GLX context in the harness.
 Against Apple's GL, B differs by 0 px in JITTER AA and SOFT SHADOW and 1 px
 in MOTION BLUR in Chrome, and by 0 px in all three natively on Mesa iris's
 GLES, every channel within 5 levels. A differs by 347, 6353 and 2187 px.
-TRAIL differs by 813 px on B (784 on A), from the missing `GL_MULT`.
+TRAIL differs by 813 px on B (784 on A), from the missing `GL_MULT`;
+PR13 implements it, with `GL_ADD` (demo 13).
 
 ## The frame time
 

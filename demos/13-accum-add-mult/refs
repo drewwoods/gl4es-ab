@@ -1,0 +1,9 @@
+# Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
+# A: ad208ddf PR12's tip (pr-12-accum-deferred-scissor), which PR13 builds on:
+#    PR10 with gl-repl's deferred-return and deferred-scissor patches
+# B: dacfacdc "Implement GL_ADD and GL_MULT for the accumulation buffer"
+REF_A=ad208ddff1bdd189347e637201d3590e0c338944
+REF_B=dacfacdc0232023d4cf119a6a7a5ca3516275a4c
+# The desktop GL reference needs an accumulation buffer, which a framebuffer
+# object doesn't have: on macOS it draws into an off-screen window instead.
+ACCUM=1
