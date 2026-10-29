@@ -82,11 +82,11 @@
 <body class="">
 <main>
   <h1>09 · Wide lines on WebGL</h1>
-  <div class="refs">A = original, c1d7d014fc · B = patched, 5a7ad4b74c</div>
+  <div class="refs">A = original, c1d7d014fc · B = patched, e83e92d792</div>
   <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/09-line-width">demos/09-line-width</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/09-line-width/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/09-line-width/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/09-line-width/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
     <figure><figcaption>A · original <code>c1d7d014fc</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
-    <figure><figcaption>B · patched <code>5a7ad4b74c</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+    <figure><figcaption>B · patched <code>e83e92d792</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <section class="timing">
     <div class="head">
@@ -185,11 +185,11 @@ glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, range);</code></pre></div>
 <p>A is <a href="https://github.com/drewwoods/gl4es/commit/c1d7d014fcf687ed33f30ce78b6480b3be1cbeee"><code>c1d7d014fc</code></a> Merge pull request #530 from The1TrueJoe/noaniso</p>
 <p>B adds these commits:</p>
 <ol>
-<li><a href="https://github.com/drewwoods/gl4es/commit/4d811a8f2fad9a74baedca9f09f32a33994525a9"><code>4d811a8f2f</code></a> src/gl: Draw lines wider than the driver allows as quads</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/fb4581b70fa0bce0c4deb6a7c9f0847ae0769a7c"><code>fb4581b70f</code></a> src/gl: Widen emulated wide lines along the minor axis, as GL does</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/5a7ad4b74ce936501ebd314545a7c0d1f17b9442"><code>5a7ad4b74c</code></a> src/gl: Emulate wide lines only where the driver draws none</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/5ed70214ae6f163926f0d8416fc3d855a313c9fa"><code>5ed70214ae</code></a> src/gl: Emulate wide lines with quads</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/0bef67f13f3d0e00feea7049e0ab53d6b35d67a3"><code>0bef67f13f</code></a> src/gl: Expand emulated lines along the minor axis</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/e83e92d792690223125edc0e65ed31bc19d50007"><code>e83e92d792</code></a> src/gl: Use wide-line emulation only for single-width drivers</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/c1d7d014fcf6...5a7ad4b74ce9">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/c1d7d014fcf6...e83e92d79269">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and

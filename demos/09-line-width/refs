@@ -1,6 +1,6 @@
 # Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
 # A: c1d7d014 upstream master (#530; PR08 merged as #525)
-# B: 5a7ad4b7 "Emulate wide lines only where the driver draws none", the
+# B: e83e92d7 "Use wide-line emulation only for single-width drivers", the
 #    last of three line-width commits, rebased onto c1d7d014
 REF_A=c1d7d014fcf687ed33f30ce78b6480b3be1cbeee
-REF_B=5a7ad4b74ce936501ebd314545a7c0d1f17b9442
+REF_B=e83e92d792690223125edc0e65ed31bc19d50007

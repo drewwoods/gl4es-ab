@@ -8,9 +8,9 @@ wide.
 
 | Commit | |
 |---|---|
-| Draw lines wider than the driver allows as quads | each wide line segment becomes a screen-space quad, drawn with a temporary identity transform; `glGet` of the range reports [1, 64] (gl-repl's patch) |
-| Widen emulated wide lines along the minor axis, as GL does | the quads were widened perpendicular to the line; GL widens a non-antialiased wide line along its minor axis (GL 2.1 section 3.4.2), without extending its ends |
-| Emulate wide lines only where the driver draws none | the quads were also used above the largest width of drivers that do draw wide lines (Mesa iris: 7.375), where GL clamps the width instead |
+| Emulate wide lines with quads | each wide line segment becomes a screen-space quad, drawn with a temporary identity transform; `glGet` of the range reports [1, 64] (gl-repl's patch) |
+| Expand emulated lines along the minor axis | the quads were widened perpendicular to the line; GL widens a non-antialiased wide line along its minor axis (GL 2.1 section 3.4.2), without extending its ends |
+| Use wide-line emulation only for single-width drivers | the quads were also used above the largest width of drivers that do draw wide lines (Mesa iris: 7.375), where GL clamps the width instead |
 
 ## What the page shows
 
