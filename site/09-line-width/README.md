@@ -25,20 +25,34 @@ Each row's OpenGL is listed on the page under the frames:
   line: [1, 1] on A, [1, 64] on B.
 
 Odd widths are centered on pixel centers and even widths on pixel edges, so
-no line edge falls exactly on a pixel center, where implementations may
-round either way.
+the edges of the horizontal lines miss pixel centers, where implementations
+may round either way. The edges of the even-width 45-degree lines, and the
+ends of every line, still run through pixel centers.
 
 ## Against native desktop GL
 
 In Chrome, B matches Apple's OpenGL exactly (0 px) and differs from Mesa
-radeonsi by 342 px, NVIDIA by 462 and Mesa iris by 524, on line edges; A
-differs from each by about 3,400 to 3,700 px. With only the first commit, B was 622 px from
+radeonsi by 342 px, NVIDIA by 462 and Mesa iris by 524, exactly where
+Apple's GL differs from them:
+
+- 332 px in each is the POLYGON MODE label, one pixel lower on Apple and
+  gl4es. In float, its raster position comes out at 79.999992, which both
+  floor to 79; Mesa adds 0.0001 first (to match SGI's OpenGL, its source
+  says) and gets 80, and NVIDIA agrees with Mesa.
+- 10 to 12 px are the polygon-mode boxes' corners, where the edges' ends
+  fall on pixel centers.
+- NVIDIA draws the 45-degree lines of widths 6 and 10 one pixel further
+  right, deciding the pixel centers on their edges the other way (120 px).
+- Mesa iris's desktop GL draws the 10-pixel lines 7.375 wide, its largest
+  line width (180 px).
+
+A differs from each by about 3,400 to 3,700 px. With only the first commit, B was 622 px from
 Apple: a 45-degree line drawn perpendicular-wide is about 1.4 times thicker
 than GL's, with its ends cut across the line.
 
 Natively the drivers draw wide lines themselves, so A and B are identical
-there. Both differ from the same machine's desktop GL by 332 px, a native
-difference that predates these commits.
+there. Both differ from the same machine's desktop GL by 332 px: the POLYGON
+MODE label again, which predates these commits.
 
 ## The frame time
 

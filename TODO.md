@@ -122,6 +122,13 @@ eye-space position in highp`. It changes nothing in gl-repl's web catalog
 
 ## Found while testing, not fixed
 
+- **glBitmap just under an integer raster position.** raster.c truncates
+  the raster position (`int ry = glstate->raster.rPos.y-yorig`), where
+  Mesa adds 0.0001 before flooring, "to satisfy conformance tests (matches
+  SGI's OpenGL)". glOrtho(0, 480, 0, 360) puts y = 80 at 79.999992 in
+  float, so demo 09's POLYGON MODE label is a pixel lower than on Mesa and
+  NVIDIA: 332 px against each, natively too. Apple's GL floors as gl4es
+  does. A one-line fix (x as well as y).
 - **mediump in fixed-function vertex shaders.** gl4es gives its generated
   shaders a mediump default (`wanthighp = !fpeShader` in shaderconv.c),
   vertex shaders included. PR06 makes the eye-space position and the point
