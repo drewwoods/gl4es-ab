@@ -71,4 +71,4 @@ PR13 implements it, with `GL_ADD` (demo 13).
 
 B is slower because it does the work: at 16 passes, 56 framebuffer
 copies and 60 quad draws per frame, where A's `glAccum` does nothing. In Chrome
-A takes 0.38 ms and B 0.60 ms; natively on Mesa iris, 2.1 and 8.0 ms.
+A takes 0.85 ms and B 1.47 ms; natively on Mesa iris, 2.1 and 8.0 ms.
