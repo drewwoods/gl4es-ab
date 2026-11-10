@@ -82,11 +82,11 @@
 <body class="">
 <main>
   <h1>10 · The accumulation buffer</h1>
-  <div class="refs">A = original, 2037865590 · B = patched, d5da05349d</div>
+  <div class="refs">A = original, bc4314d836 · B = patched, 32af704157</div>
   <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/10-accum">demos/10-accum</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/10-accum/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/10-accum/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/10-accum/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
-    <figure><figcaption>A · original <code>2037865590</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
-    <figure><figcaption>B · patched <code>d5da05349d</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+    <figure><figcaption>A · original <code>bc4314d836</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
+    <figure><figcaption>B · patched <code>32af704157</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <section class="timing">
     <div class="head">
@@ -176,15 +176,15 @@ glAccum(GL_RETURN, 2.5f);</code></pre></div>
   </section>
   <section class="commits">
     <h2>What changes from A to B</h2>
-<p>A is <a href="https://github.com/drewwoods/gl4es/commit/2037865590d410bcd7b8d1f22b841472ed6d39ac"><code>2037865590</code></a> Merge pull request #524 from drewwoods/pr-07-polygon-lines</p>
+<p>A is <a href="https://github.com/drewwoods/gl4es/commit/bc4314d8369f169d3fa81c5ed1b46b3dba4e74a5"><code>bc4314d836</code></a> Merge pull request #531 from drewwoods/pr-09-line-width</p>
 <p>B adds these commits:</p>
 <ol>
-<li><a href="https://github.com/drewwoods/gl4es/commit/334558db5a115e21012c30141670581ad8c075cd"><code>334558db5a</code></a> src/gl: Emulate the accumulation buffer with a framebuffer object</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/c78f80e3af1c9ffec3f2552ecc21f8430216a4f7"><code>c78f80e3af</code></a> src/gl: Clamp the accumulation clear value, and map it for glGetIntegerv</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/d4150ee16a6ad2d292a1472aad91b41281ca6b15"><code>d4150ee16a</code></a> src/gl: Probe the half-float accumulation buffer without a feedback loop</li>
-<li><a href="https://github.com/drewwoods/gl4es/commit/d5da05349d64717699da87d4fb0cc7f86fb444d6"><code>d5da05349d</code></a> src/gl: Add TODOs for accumulation-buffer gaps</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/189029fefab36f4a71830752ce4ce9624293413d"><code>189029fefa</code></a> src/gl: Emulate the accumulation buffer with a framebuffer object</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/34e95d750bd372fdf73f6bdb64dec0484453fced"><code>34e95d750b</code></a> src/gl: Clamp the accumulation clear value, and map it for glGetIntegerv</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/ab5ee6d20fd0823095a64662828613e52d1778f2"><code>ab5ee6d20f</code></a> src/gl: Probe the half-float accumulation buffer without a feedback loop</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/32af704157d2ebd8abad22443670257eb9fb2f41"><code>32af704157</code></a> src/gl: Add TODOs for accumulation-buffer gaps</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/2037865590d4...d5da05349d64">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/bc4314d8369f...32af704157d2">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and

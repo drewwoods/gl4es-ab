@@ -1,8 +1,8 @@
 # Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
-# A: 20378655 upstream master (#524, PR07, merged)
-# B: d5da0534 "Add TODOs for accumulation-buffer gaps", after the accum-FBO, clear-value and probe commits
-REF_A=2037865590d410bcd7b8d1f22b841472ed6d39ac
-REF_B=d5da05349d64717699da87d4fb0cc7f86fb444d6
+# A: bc4314d8 upstream master (#531, PR09, merged)
+# B: 32af7041 "Add TODOs for accumulation-buffer gaps", after the accum-FBO, clear-value and probe commits
+REF_A=bc4314d8369f169d3fa81c5ed1b46b3dba4e74a5
+REF_B=32af704157d2ebd8abad22443670257eb9fb2f41
 # The desktop GL reference needs an accumulation buffer, which a framebuffer
 # object doesn't have: on macOS it draws into an off-screen window instead.
 ACCUM=1
