@@ -82,11 +82,11 @@
 <body class="">
 <main>
   <h1>13 · glAccum(GL_ADD) and glAccum(GL_MULT)</h1>
-  <div class="refs">A = original, ad208ddff1 · B = patched, dacfacdc02</div>
+  <div class="refs">A = original, 14c061854e · B = patched, 2abbd9765b</div>
   <div class="source">Demo source: <a href="https://github.com/drewwoods/gl4es-ab/tree/main/demos/13-accum-add-mult">demos/13-accum-add-mult</a> (<a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/13-accum-add-mult/main.c">main.c</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/13-accum-add-mult/README.md">README.md</a>, <a href="https://github.com/drewwoods/gl4es-ab/blob/main/demos/13-accum-add-mult/refs">refs</a>) · <a href="https://github.com/drewwoods/gl4es-ab/tree/main/harness">harness</a></div>
   <div class="ab">
-    <figure><figcaption>A · original <code>ad208ddff1</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
-    <figure><figcaption>B · patched <code>dacfacdc02</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
+    <figure><figcaption>A · original <code>14c061854e</code></figcaption><iframe src="a/index.html" title="A (original)"></iframe></figure>
+    <figure><figcaption>B · patched <code>2abbd9765b</code></figcaption><iframe src="b/index.html" title="B (patched)"></iframe></figure>
   </div>
   <section class="timing">
     <div class="head">
@@ -158,12 +158,12 @@ glAccum(GL_RETURN, 2.0f);</code></pre></div>
   </section>
   <section class="commits">
     <h2>What changes from A to B</h2>
-<p>A is <a href="https://github.com/drewwoods/gl4es/commit/ad208ddff1bdd189347e637201d3590e0c338944"><code>ad208ddff1</code></a> [accum-deferred-scissor] gl-repl patch</p>
+<p>A is <a href="https://github.com/drewwoods/gl4es/commit/14c061854eaded92a63bb48f8fddb8c345e5a71b"><code>14c061854e</code></a> src/gl: Snapshot only the scissor box for a deferred accumulation batch</p>
 <p>B adds these commits:</p>
 <ol>
-<li><a href="https://github.com/drewwoods/gl4es/commit/dacfacdc0232023d4cf119a6a7a5ca3516275a4c"><code>dacfacdc02</code></a> src/gl: Implement GL_ADD and GL_MULT for the accumulation buffer</li>
+<li><a href="https://github.com/drewwoods/gl4es/commit/2abbd9765b587eb4558a34f3bacd9d28e6148dce"><code>2abbd9765b</code></a> src/gl: Implement GL_ADD and GL_MULT for the accumulation buffer</li>
 </ol>
-<p><a href="https://github.com/drewwoods/gl4es/compare/ad208ddff1bd...dacfacdc0232">Full diff A...B on GitHub</a></p>
+<p><a href="https://github.com/drewwoods/gl4es/compare/14c061854ead...2abbd9765b58">Full diff A...B on GitHub</a></p>
   </section>
   <div class="notes">
     A and B are separate pages because each links its own gl4es build, and
