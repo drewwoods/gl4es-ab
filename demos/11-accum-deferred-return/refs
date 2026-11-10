@@ -1,0 +1,8 @@
+# Default A/B for build.sh and crashtest.sh: full SHAs in $GL4ES_REPO.
+# A: 32af7041 PR10's tip (pr-10-accum), which PR11 builds on
+# B: 0eb0233a "Defer GL_LOAD and GL_ACCUM to GL_RETURN"
+REF_A=32af704157d2ebd8abad22443670257eb9fb2f41
+REF_B=0eb0233a0dc4e7e416f151c7c9edcfc6eeface61
+# The desktop GL reference needs an accumulation buffer, which a framebuffer
+# object doesn't have: on macOS it draws into an off-screen window instead.
+ACCUM=1
